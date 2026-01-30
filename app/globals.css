@@ -54,7 +54,7 @@
   --card-foreground: rgba(255, 255, 255, 0.95);
   --popover: rgba(26, 26, 31, 0.9);
   --popover-foreground: rgba(255, 255, 255, 0.95);
-  --primary: #FF6B6B;
+  --primary: #ff6b6b;
   --primary-foreground: #0A0A0B;
   --secondary: #131316;
   --secondary-foreground: rgba(255, 255, 255, 0.95);
@@ -74,7 +74,7 @@
   --chart-5: hsl(325 72% 55%);
   --sidebar: rgba(26, 26, 31, 0.8);
   --sidebar-foreground: rgba(255, 255, 255, 0.95);
-  --sidebar-primary: #FF6B6B;
+  --sidebar-primary: #ff6b6b;
   --sidebar-primary-foreground: #0A0A0B;
   --sidebar-accent: rgba(255, 255, 255, 0.03);
   --sidebar-accent-foreground: rgba(255, 255, 255, 0.95);
@@ -82,9 +82,9 @@
   --sidebar-ring: rgba(255, 107, 107, 0.6);
   
   /* Melon Colors */
-  --melon-red: #FF6B6B;
-  --melon-coral: #FF8787;
-  --melon-pink: #FFB3B3;
+  --melon-red: #ff6b6b;
+  --melon-coral: #ff6b6b;
+  --melon-pink: #ff6b6b;
   --melon-green: #98D8C8;
   
   /* Glass Surfaces */
@@ -250,7 +250,7 @@
   
   /* Melon gradient */
   .melon-gradient {
-    background: linear-gradient(135deg, var(--melon-red) 0%, var(--melon-coral) 100%);
+    background: #ff6b6b;
   }
   
   /* Inline code styling */

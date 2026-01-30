@@ -33,7 +33,7 @@ export function ModelSpecsDialog({
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(255, 107, 107, 0.15)" }}
             >
-              <Cpu className="h-5 w-5" style={{ color: "var(--melon-coral)" }} />
+              <Cpu className="h-5 w-5" style={{ color: "#ff6b6b" }} />
             </div>
             <div>
               <DialogTitle className="text-lg">{model.name}</DialogTitle>
@@ -111,7 +111,7 @@ export function ModelSpecsDialog({
                 style={{
                   background: "rgba(255, 107, 107, 0.1)",
                   borderColor: "rgba(255, 107, 107, 0.3)",
-                  color: "var(--melon-coral)",
+                  color: "#ff6b6b",
                 }}
               >
                 {tag}

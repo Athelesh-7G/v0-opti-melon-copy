@@ -407,7 +407,7 @@ export function ChatWindow() {
               <h2 className="text-3xl font-bold mb-2 tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
                 OPTI MELON
               </h2>
-              <p className="text-lg font-medium mb-4" style={{ color: 'var(--melon-coral)' }}>
+              <p className="text-lg font-medium mb-4" style={{ color: '#ff6b6b' }}>
                 Ultimate AI Platform
               </p>
               <p className="max-w-lg mb-5 leading-relaxed text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
@@ -417,10 +417,10 @@ export function ChatWindow() {
                 <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(152, 216, 200, 0.15)', color: 'var(--melon-green)' }}>
                   <Code className="h-3 w-3" /> Coders
                 </span>
-                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(255, 107, 107, 0.15)', color: 'var(--melon-coral)' }}>
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(255, 107, 107, 0.15)', color: '#ff6b6b' }}>
                   <Pen className="h-3 w-3" /> Creators
                 </span>
-                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(255, 179, 179, 0.15)', color: 'var(--melon-pink)' }}>
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(255, 107, 107, 0.15)', color: '#ff6b6b' }}>
                   <Brain className="h-3 w-3" /> Reasoning
                 </span>
                 <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(152, 216, 200, 0.12)', color: 'var(--melon-green)' }}>
@@ -475,9 +475,9 @@ export function ChatWindow() {
                     <div className="flex items-center gap-2">
                       <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Generating response</span>
                       <span className="flex gap-1" aria-hidden="true">
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "300ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#ff6b6b', animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#ff6b6b', animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#ff6b6b', animationDelay: "300ms" }} />
                       </span>
                     </div>
                     <p className="text-xs mt-1 hidden sm:block" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>

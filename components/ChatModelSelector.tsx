@@ -24,13 +24,13 @@ const CATEGORY_CONFIG: Record<ModelCategory, { icon: React.ReactNode; color: str
   },
   coders: {
     icon: <Code className="h-3.5 w-3.5" />,
-    color: "var(--melon-coral)",
+    color: "#ff6b6b",
     bgColor: "rgba(255, 107, 107, 0.15)",
   },
   creators: {
     icon: <Pen className="h-3.5 w-3.5" />,
-    color: "var(--melon-pink)",
-    bgColor: "rgba(255, 179, 179, 0.15)",
+    color: "#ff6b6b",
+    bgColor: "rgba(255, 107, 107, 0.15)",
   },
   reasoning: {
     icon: <Brain className="h-3.5 w-3.5" />,
