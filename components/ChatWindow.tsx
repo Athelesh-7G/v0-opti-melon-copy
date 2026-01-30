@@ -88,8 +88,9 @@ export function ChatWindow() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
       abortControllerRef.current = null
-      setIsLoading(false)
     }
+    // Immediately stop loading to return Send button
+    setIsLoading(false)
   }, [])
 
   const sendMessage = useCallback(async () => {
@@ -321,25 +322,16 @@ export function ChatWindow() {
         <header className="flex-shrink-0 border-b px-4 py-4 glass-card relative z-10" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-xl melon-gradient flex items-center justify-center shadow-lg" style={{ boxShadow: '0 4px 16px rgba(255, 107, 107, 0.3)' }}>
-                <span className="text-lg" role="img" aria-label="watermelon">🍉</span>
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 bg-green-600" style={{ borderColor: 'var(--background)' }} />
+            <div className="w-9 h-9 rounded-xl melon-gradient flex items-center justify-center" style={{ boxShadow: '0 2px 8px rgba(255, 107, 107, 0.2)' }}>
+              <span className="text-base" role="img" aria-label="watermelon">🍉</span>
             </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight melon-gradient bg-clip-text text-transparent">
-                OptiMelon
-              </h1>
-              <p className="text-xs font-mono" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>Configured Best.</p>
-            </div>
+            <h1 className="text-lg font-semibold tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+              OptiMelon
+            </h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border" style={{ background: 'rgba(255, 255, 255, 0.03)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
-              <div className="w-2 h-2 rounded-full animate-pulse bg-green-600" style={{ boxShadow: '0 0 8px rgba(16, 185, 129, 0.5)' }} />
-              <span className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>{PROVIDER_NAMES[provider]}</span>
-              <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>/</span>
-              <span className="font-mono text-sm truncate max-w-[120px]" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>{model.split("/").pop()}</span>
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+              <span className="text-xs font-mono truncate max-w-[140px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{model.split("/").pop()}</span>
             </div>
           </div>
         </div>
@@ -367,7 +359,7 @@ export function ChatWindow() {
                 {[
                   { text: "Help me code", icon: "💻" },
                   { text: "Explain a concept", icon: "📚" },
-                  { text: "Draft an email", icon: "✉️" },
+                  { text: "Draft an email", icon: "���️" },
                 ].map((suggestion) => (
                   <button
                     key={suggestion.text}
@@ -427,18 +419,17 @@ export function ChatWindow() {
       )}
 
       {/* Input area */}
-      <footer className="flex-shrink-0 border-t px-4 py-4 sticky bottom-0" style={{ borderColor: 'rgba(255, 255, 255, 0.08)', background: 'rgba(26, 26, 31, 0.6)', backdropFilter: 'blur(24px) saturate(180%)' }}>
+      <footer className="flex-shrink-0 border-t px-4 py-3 sticky bottom-0" style={{ borderColor: 'rgba(255, 255, 255, 0.08)', background: 'rgba(26, 26, 31, 0.6)', backdropFilter: 'blur(24px) saturate(180%)' }}>
         <div className="max-w-4xl mx-auto">
-          <div className="flex gap-3 items-end">
+          <div className="flex gap-2.5 items-end">
             <div className="flex-1 relative">
               <Textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
-                className="min-h-[56px] max-h-[200px] resize-none pr-4 rounded-2xl transition-all glass-input"
-                style={{ fontSize: '0.9375rem' }}
+                placeholder="Message OptiMelon..."
+                className="min-h-[52px] max-h-[200px] resize-none pr-3 py-3 rounded-xl transition-all glass-input text-sm"
                 disabled={isLoading}
               />
             </div>
@@ -446,10 +437,10 @@ export function ChatWindow() {
               <Button
                 onClick={handleStop}
                 size="icon"
-                className="h-14 w-14 rounded-2xl transition-all duration-200 border"
+                className="h-[52px] w-[52px] rounded-xl transition-all duration-200 border flex-shrink-0"
                 style={{
                   background: 'rgba(255, 107, 107, 0.15)',
-                  borderColor: 'var(--melon-red)',
+                  borderColor: 'rgba(255, 107, 107, 0.4)',
                   color: 'var(--melon-red)',
                   animation: 'pulseGlow 2s ease-in-out infinite'
                 }}
@@ -461,16 +452,13 @@ export function ChatWindow() {
                 onClick={sendMessage}
                 disabled={!input.trim()}
                 size="icon"
-                className="h-14 w-14 rounded-2xl melon-gradient shadow-lg hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ boxShadow: '0 4px 16px rgba(255, 107, 107, 0.3)' }}
+                className="h-[52px] w-[52px] rounded-xl melon-gradient shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                style={{ boxShadow: '0 3px 12px rgba(255, 107, 107, 0.25)' }}
               >
-                <Send className="h-5 w-5" />
+                <Send className="h-4.5 w-4.5" />
               </Button>
             )}
           </div>
-          <p className="text-xs mt-2 text-center" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
-            Press Enter to send {isLoading && '• Esc to stop'}
-          </p>
         </div>
       </footer>
 

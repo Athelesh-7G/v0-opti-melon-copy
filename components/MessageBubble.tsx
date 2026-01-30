@@ -44,25 +44,55 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   )
 }
 
+// Parse inline markdown with soft styling
+function parseSoftInlineMarkdown(text: string): string {
+  // Escape HTML first
+  const escapeHtml = (str: string): string => {
+    const entities: Record<string, string> = {
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }
+    return str.replace(/[&<>"']/g, (char) => entities[char])
+  }
+  
+  let result = escapeHtml(text)
+  
+  // Bold - subtle weight, no loud color
+  result = result.replace(/\*\*(.*?)\*\*/g, '<strong class="font-medium" style="color: rgba(255, 255, 255, 0.92);">$1</strong>')
+  
+  // Italic
+  result = result.replace(/\*(.*?)\*/g, "<em>$1</em>")
+  
+  // Inline code
+  result = result.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+  
+  // Links
+  result = result.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80 transition-colors">$1</a>'
+  )
+  
+  return result
+}
+
 function renderTextContent(text: string, keyPrefix: string) {
   const blocks = parseBlockMarkdown(text)
   
   return blocks.map((block, i) => {
     if (block.type === 'heading') {
-      const HeadingTag = `h${block.level}` as keyof JSX.IntrinsicElements
+      // Soften headers - minimal visual distinction, natural text hierarchy
       const headingStyles = {
-        1: "text-xl font-semibold mt-4 mb-2",
-        2: "text-lg font-semibold mt-3 mb-2",
-        3: "text-base font-semibold mt-2 mb-1.5"
+        1: "text-base font-semibold mt-3 mb-1.5",
+        2: "text-base font-medium mt-2 mb-1",
+        3: "text-base font-medium mt-2 mb-1"
       }
       return (
-        <HeadingTag 
+        <p 
           key={`${keyPrefix}-h${block.level}-${i}`} 
           className={headingStyles[block.level as 1 | 2 | 3]}
-          style={{ color: 'rgba(255, 255, 255, 0.95)' }}
+          style={{ color: 'rgba(255, 255, 255, 0.9)' }}
         >
-          <span dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(block.content) }} />
-        </HeadingTag>
+          <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content) }} />
+        </p>
       )
     }
     
@@ -71,8 +101,8 @@ function renderTextContent(text: string, keyPrefix: string) {
       return (
         <ul key={`${keyPrefix}-ul-${i}`} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'disc', color: 'rgba(255, 255, 255, 0.8)' }}>
           {items.map((item, j) => (
-            <li key={j} className="leading-relaxed">
-              <span dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(item) }} />
+            <li key={j} className="leading-relaxed text-sm">
+              <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item) }} />
             </li>
           ))}
         </ul>
@@ -84,8 +114,8 @@ function renderTextContent(text: string, keyPrefix: string) {
       return (
         <ol key={`${keyPrefix}-ol-${i}`} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'decimal', color: 'rgba(255, 255, 255, 0.8)' }}>
           {items.map((item, j) => (
-            <li key={j} className="leading-relaxed">
-              <span dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(item) }} />
+            <li key={j} className="leading-relaxed text-sm">
+              <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item) }} />
             </li>
           ))}
         </ol>
@@ -95,7 +125,7 @@ function renderTextContent(text: string, keyPrefix: string) {
     // Regular paragraph
     return (
       <p key={`${keyPrefix}-p-${i}`} className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-        <span dangerouslySetInnerHTML={{ __html: parseInlineMarkdown(block.content) }} />
+        <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content) }} />
       </p>
     )
   })
