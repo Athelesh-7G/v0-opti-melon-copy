@@ -297,6 +297,13 @@ export function ChatWindow() {
     }
   }, [currentChatId, handleNewChat])
 
+  // Handle editing a user message - puts content back in input for re-submission
+  const handleEditMessage = useCallback((messageContent: string) => {
+    setInput(messageContent)
+    // Focus the textarea
+    textareaRef.current?.focus()
+  }, [])
+
   // Initialize with a new chat
   useEffect(() => {
     if (!currentChatId && chats.length === 0) {
@@ -385,6 +392,7 @@ export function ChatWindow() {
                   key={message.id}
                   role={message.role}
                   content={message.content}
+                  onEdit={message.role === "user" ? handleEditMessage : undefined}
                 />
               ))}
               {isLoading && messages[messages.length - 1]?.role === "user" && (

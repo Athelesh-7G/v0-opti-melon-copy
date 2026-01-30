@@ -61,38 +61,40 @@ export function Sidebar({
     }
   }
 
-  // Mobile toggle button - always visible on mobile
-  const MobileToggle = () => (
-    <button
-      onClick={() => setIsOpen(!isOpen)}
-      className="md:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl border transition-all duration-200 shadow-sm"
-      style={{ 
-        background: 'rgba(26, 26, 31, 0.9)', 
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-        backdropFilter: 'blur(16px)'
-      }}
-      aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
-    >
-      {isOpen ? (
-        <X className="h-5 w-5" style={{ color: 'rgba(255, 255, 255, 0.9)' }} />
-      ) : (
+  // Toggle button - visible on mobile (fixed) and available on desktop within sidebar
+  const SidebarToggle = () => {
+    // Only show floating toggle on mobile when sidebar is closed
+    if (!isMobile) return null
+    
+    return (
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 z-50 p-2.5 rounded-xl border transition-all duration-200 shadow-sm"
+        style={{ 
+          background: 'rgba(26, 26, 31, 0.95)', 
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(16px)',
+          display: isOpen ? 'none' : 'flex'
+        }}
+        aria-label="Open sidebar"
+      >
         <Menu className="h-5 w-5" style={{ color: 'rgba(255, 255, 255, 0.9)' }} />
-      )}
-    </button>
-  )
+      </button>
+    )
+  }
 
   // Determine if sidebar should be visible
   const sidebarVisible = !isMobile || isOpen
 
   return (
     <>
-      <MobileToggle />
+      <SidebarToggle />
       
       {/* Mobile backdrop */}
       {isMobile && isOpen && (
         <button
           type="button"
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 md:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30"
           onClick={() => setIsOpen(false)}
           aria-label="Close sidebar"
         />
@@ -111,6 +113,20 @@ export function Sidebar({
           backdropFilter: 'blur(16px)' 
         }}
       >
+      {/* Close button inside sidebar on mobile */}
+      {isMobile && isOpen && (
+        <button
+          onClick={() => setIsOpen(false)}
+          className="absolute top-3 right-3 p-2 rounded-lg transition-all duration-200 z-10"
+          style={{ 
+            background: 'rgba(255, 255, 255, 0.05)',
+            color: 'rgba(255, 255, 255, 0.7)'
+          }}
+          aria-label="Close sidebar"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
       {/* Sidebar Header */}
       <div className="p-3 border-b" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
         {/* New Chat Button */}

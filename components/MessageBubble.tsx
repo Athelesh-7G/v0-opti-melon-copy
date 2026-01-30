@@ -2,12 +2,14 @@
 
 import React from "react"
 import { useState, useCallback, useMemo, useId } from "react"
-import { Check, Copy, User } from "lucide-react"
+import { Check, Copy, User, Pencil } from "lucide-react"
 import { extractCodeBlocks, parseBlockMarkdown } from "@/lib/markdown"
 
 interface MessageBubbleProps {
   role: "user" | "assistant"
   content: string
+  onCopy?: (content: string) => void
+  onEdit?: (content: string) => void
 }
 
 function CodeBlock({ language, code }: { language: string; code: string }) {
@@ -175,17 +177,32 @@ function renderContent(content: string, uniqueId: string): React.ReactNode[] {
   return elements
 }
 
-export function MessageBubble({ role, content }: MessageBubbleProps) {
+export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubbleProps) {
   // Use stable ID for hydration safety
   const id = useId()
   const renderedContent = useMemo(() => renderContent(content, id), [content, id])
+  const [copied, setCopied] = useState(false)
+  const [showActions, setShowActions] = useState(false)
+
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(content)
+    setCopied(true)
+    onCopy?.(content)
+    setTimeout(() => setCopied(false), 2000)
+  }, [content, onCopy])
+
+  const handleEdit = useCallback(() => {
+    onEdit?.(content)
+  }, [content, onEdit])
 
   return (
     <div
-      className={`flex gap-3 ${
+      className={`group flex gap-3 ${
         role === "user" ? "flex-row-reverse" : ""
       }`}
       style={{ animation: 'messageEnter 0.3s ease-out' }}
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
     >
       <div
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${
@@ -201,24 +218,84 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
           <span className="text-sm" role="img" aria-label="assistant">🍉</span>
         )}
       </div>
-      <div
-        className={`flex-1 max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm ${
-          role === "user"
-            ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground ml-auto border-l-2"
-            : "border"
-        }`}
-        style={
-          role === "user" 
-            ? { borderLeftColor: 'var(--melon-red)' }
-            : { 
-                background: 'rgba(26, 26, 31, 0.4)', 
-                borderColor: 'rgba(255, 255, 255, 0.05)' 
-              }
-        }
-      >
-        <div className={`max-w-none ${role === "user" ? "" : ""}`}>
-          {renderedContent}
+      <div className={`flex-1 max-w-[85%] ${role === "user" ? "ml-auto" : ""}`}>
+        <div
+          className={`rounded-2xl px-5 py-3.5 shadow-sm ${
+            role === "user"
+              ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground border-l-2"
+              : "border"
+          }`}
+          style={
+            role === "user" 
+              ? { borderLeftColor: 'var(--melon-red)' }
+              : { 
+                  background: 'rgba(26, 26, 31, 0.4)', 
+                  borderColor: 'rgba(255, 255, 255, 0.05)' 
+                }
+          }
+        >
+          <div className="max-w-none">
+            {renderedContent}
+          </div>
         </div>
+        
+        {/* Action buttons - show on hover for user messages */}
+        {role === "user" && (
+          <div 
+            className={`flex justify-end gap-1 mt-1.5 transition-opacity duration-200 ${
+              showActions ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <button
+              onClick={handleCopy}
+              className="p-1.5 rounded-md transition-all duration-200 hover:scale-105"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: copied ? 'var(--melon-green)' : 'rgba(255, 255, 255, 0.5)'
+              }}
+              aria-label={copied ? "Copied" : "Copy message"}
+              title="Copy message"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+            {onEdit && (
+              <button
+                onClick={handleEdit}
+                className="p-1.5 rounded-md transition-all duration-200 hover:scale-105"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'rgba(255, 255, 255, 0.5)'
+                }}
+                aria-label="Edit message"
+                title="Edit message"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+        
+        {/* Copy button for assistant messages */}
+        {role === "assistant" && (
+          <div 
+            className={`flex justify-start gap-1 mt-1.5 transition-opacity duration-200 ${
+              showActions ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <button
+              onClick={handleCopy}
+              className="p-1.5 rounded-md transition-all duration-200 hover:scale-105"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: copied ? 'var(--melon-green)' : 'rgba(255, 255, 255, 0.5)'
+              }}
+              aria-label={copied ? "Copied" : "Copy response"}
+              title="Copy response"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
