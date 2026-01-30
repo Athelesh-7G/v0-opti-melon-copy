@@ -1,7 +1,7 @@
 "use client"
 
-import React from "react"
-import { Plus, Home, Settings, Trash2 } from "lucide-react"
+import React, { useState, useEffect } from "react"
+import { Plus, Home, Settings, Trash2, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow } from "date-fns"
 
@@ -28,16 +28,94 @@ export function Sidebar({
   onDeleteChat,
   onOpenSettings,
 }: SidebarProps) {
-  return (
-    <aside
-      className="w-[240px] h-screen flex-shrink-0 flex flex-col border-r"
-      style={{ borderColor: "rgba(255, 255, 255, 0.06)", background: 'rgba(26, 26, 31, 0.4)', backdropFilter: 'blur(16px)' }}
+  // Use state with useEffect to avoid hydration mismatch
+  const [isOpen, setIsOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Handle responsive detection after mount to avoid hydration issues
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    // Initial check
+    checkMobile()
+    
+    // Listen for resize
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Close sidebar when selecting chat on mobile
+  const handleSelectChat = (chatId: string) => {
+    onSelectChat(chatId)
+    if (isMobile) {
+      setIsOpen(false)
+    }
+  }
+
+  const handleNewChat = () => {
+    onNewChat()
+    if (isMobile) {
+      setIsOpen(false)
+    }
+  }
+
+  // Mobile toggle button - always visible on mobile
+  const MobileToggle = () => (
+    <button
+      onClick={() => setIsOpen(!isOpen)}
+      className="md:hidden fixed top-4 left-4 z-50 p-2.5 rounded-xl border transition-all duration-200 shadow-sm"
+      style={{ 
+        background: 'rgba(26, 26, 31, 0.9)', 
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(16px)'
+      }}
+      aria-label={isOpen ? "Close sidebar" : "Open sidebar"}
     >
+      {isOpen ? (
+        <X className="h-5 w-5" style={{ color: 'rgba(255, 255, 255, 0.9)' }} />
+      ) : (
+        <Menu className="h-5 w-5" style={{ color: 'rgba(255, 255, 255, 0.9)' }} />
+      )}
+    </button>
+  )
+
+  // Determine if sidebar should be visible
+  const sidebarVisible = !isMobile || isOpen
+
+  return (
+    <>
+      <MobileToggle />
+      
+      {/* Mobile backdrop */}
+      {isMobile && isOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 md:hidden"
+          onClick={() => setIsOpen(false)}
+          aria-label="Close sidebar"
+        />
+      )}
+
+      <aside
+        className={`
+          ${isMobile ? 'fixed inset-y-0 left-0 z-40' : 'relative'}
+          ${sidebarVisible ? 'translate-x-0' : '-translate-x-full'}
+          w-[240px] h-screen flex-shrink-0 flex flex-col border-r
+          transition-transform duration-300 ease-in-out
+        `}
+        style={{ 
+          borderColor: "rgba(255, 255, 255, 0.06)", 
+          background: 'rgba(26, 26, 31, 0.95)', 
+          backdropFilter: 'blur(16px)' 
+        }}
+      >
       {/* Sidebar Header */}
       <div className="p-3 border-b" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
         {/* New Chat Button */}
         <Button
-          onClick={onNewChat}
+          onClick={handleNewChat}
           className="w-full melon-gradient hover:opacity-90 transition-all duration-200 text-sm"
           style={{ boxShadow: "0 2px 6px rgba(255, 107, 107, 0.15)" }}
         >
@@ -75,7 +153,7 @@ export function Sidebar({
                           background: "transparent",
                         }
                   }
-                  onClick={() => onSelectChat(chat.id)}
+                  onClick={() => handleSelectChat(chat.id)}
                   onMouseEnter={(e) => {
                     if (!isActive) {
                       e.currentTarget.style.background =
@@ -136,7 +214,7 @@ export function Sidebar({
         style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
       >
         <Button
-          onClick={onNewChat}
+          onClick={handleNewChat}
           variant="ghost"
           className="w-full justify-start hover:bg-white/5 transition-colors text-xs"
           style={{ color: "rgba(255, 255, 255, 0.6)" }}
@@ -154,6 +232,7 @@ export function Sidebar({
           Settings
         </Button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

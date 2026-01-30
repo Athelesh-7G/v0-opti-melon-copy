@@ -320,22 +320,23 @@ export function ChatWindow() {
       <div className="flex flex-col flex-1 min-w-0">
         {/* Header with glass effect */}
         <header className="flex-shrink-0 border-b px-4 py-4 glass-card relative z-10" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl melon-gradient flex items-center justify-center" style={{ boxShadow: '0 2px 8px rgba(255, 107, 107, 0.2)' }}>
-              <span className="text-base" role="img" aria-label="watermelon">🍉</span>
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            {/* Add left padding on mobile for hamburger menu */}
+            <div className="flex items-center gap-3 pl-10 md:pl-0">
+              <div className="w-9 h-9 rounded-xl melon-gradient flex items-center justify-center" style={{ boxShadow: '0 2px 8px rgba(255, 107, 107, 0.2)' }}>
+                <span className="text-base" role="img" aria-label="watermelon">🍉</span>
+              </div>
+              <h1 className="text-lg font-semibold tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                OptiMelon
+              </h1>
             </div>
-            <h1 className="text-lg font-semibold tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-              OptiMelon
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
-              <span className="text-xs font-mono truncate max-w-[140px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{model.split("/").pop()}</span>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+                <span className="text-xs font-mono truncate max-w-[140px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{model.split("/").pop()}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* Messages area */}
       <main className="flex-1 overflow-y-auto scrollbar-melon relative">
@@ -359,7 +360,7 @@ export function ChatWindow() {
                 {[
                   { text: "Help me code", icon: "💻" },
                   { text: "Explain a concept", icon: "📚" },
-                  { text: "Draft an email", icon: "���️" },
+                  { text: "Draft an email", icon: "✉️" },
                 ].map((suggestion) => (
                   <button
                     key={suggestion.text}

@@ -1,9 +1,9 @@
 "use client"
 
 import React from "react"
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useId } from "react"
 import { Check, Copy, User } from "lucide-react"
-import { extractCodeBlocks, parseInlineMarkdown, parseBlockMarkdown } from "@/lib/markdown"
+import { extractCodeBlocks, parseBlockMarkdown } from "@/lib/markdown"
 
 interface MessageBubbleProps {
   role: "user" | "assistant"
@@ -44,9 +44,9 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   )
 }
 
-// Parse inline markdown with soft styling
+// Parse inline markdown with soft styling - clean rendering without artifacts
 function parseSoftInlineMarkdown(text: string): string {
-  // Escape HTML first
+  // Escape HTML first to prevent XSS
   const escapeHtml = (str: string): string => {
     const entities: Record<string, string> = {
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -56,16 +56,16 @@ function parseSoftInlineMarkdown(text: string): string {
   
   let result = escapeHtml(text)
   
-  // Bold - subtle weight, no loud color
-  result = result.replace(/\*\*(.*?)\*\*/g, '<strong class="font-medium" style="color: rgba(255, 255, 255, 0.92);">$1</strong>')
+  // Bold - subtle weight, no loud color (match ** on both sides)
+  result = result.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-medium" style="color: rgba(255, 255, 255, 0.92);">$1</strong>')
   
-  // Italic
-  result = result.replace(/\*(.*?)\*/g, "<em>$1</em>")
+  // Italic (single * but not **) - use negative lookbehind/lookahead
+  result = result.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>")
   
-  // Inline code
+  // Inline code - backticks
   result = result.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
   
-  // Links
+  // Links - [text](url)
   result = result.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80 transition-colors">$1</a>'
@@ -74,21 +74,26 @@ function parseSoftInlineMarkdown(text: string): string {
   return result
 }
 
-function renderTextContent(text: string, keyPrefix: string) {
+function renderTextContent(text: string, keyPrefix: string): React.ReactNode[] {
   const blocks = parseBlockMarkdown(text)
   
   return blocks.map((block, i) => {
+    // Generate stable keys using index - no randomness
+    const stableKey = `${keyPrefix}-${block.type}-${i}`
+    
     if (block.type === 'heading') {
       // Soften headers - minimal visual distinction, natural text hierarchy
-      const headingStyles = {
+      // Render as styled text, not raw markdown (no "###" visible)
+      const headingStyles: Record<number, string> = {
         1: "text-base font-semibold mt-3 mb-1.5",
         2: "text-base font-medium mt-2 mb-1",
         3: "text-base font-medium mt-2 mb-1"
       }
+      const level = block.level ?? 1
       return (
         <p 
-          key={`${keyPrefix}-h${block.level}-${i}`} 
-          className={headingStyles[block.level as 1 | 2 | 3]}
+          key={stableKey} 
+          className={headingStyles[level] ?? headingStyles[1]}
           style={{ color: 'rgba(255, 255, 255, 0.9)' }}
         >
           <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content) }} />
@@ -97,11 +102,12 @@ function renderTextContent(text: string, keyPrefix: string) {
     }
     
     if (block.type === 'ul') {
-      const items = block.content.split('\n')
+      // Clean unordered list - no raw "-" or "*" visible
+      const items = block.content.split('\n').filter(item => item.trim())
       return (
-        <ul key={`${keyPrefix}-ul-${i}`} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'disc', color: 'rgba(255, 255, 255, 0.8)' }}>
+        <ul key={stableKey} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'disc', color: 'rgba(255, 255, 255, 0.8)' }}>
           {items.map((item, j) => (
-            <li key={j} className="leading-relaxed text-sm">
+            <li key={`${stableKey}-item-${j}`} className="leading-relaxed text-sm">
               <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item) }} />
             </li>
           ))}
@@ -110,11 +116,12 @@ function renderTextContent(text: string, keyPrefix: string) {
     }
     
     if (block.type === 'ol') {
-      const items = block.content.split('\n')
+      // Clean ordered list - no raw "1." visible
+      const items = block.content.split('\n').filter(item => item.trim())
       return (
-        <ol key={`${keyPrefix}-ol-${i}`} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'decimal', color: 'rgba(255, 255, 255, 0.8)' }}>
+        <ol key={stableKey} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'decimal', color: 'rgba(255, 255, 255, 0.8)' }}>
           {items.map((item, j) => (
-            <li key={j} className="leading-relaxed text-sm">
+            <li key={`${stableKey}-item-${j}`} className="leading-relaxed text-sm">
               <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item) }} />
             </li>
           ))}
@@ -122,20 +129,20 @@ function renderTextContent(text: string, keyPrefix: string) {
       )
     }
     
-    // Regular paragraph
+    // Regular paragraph - clean text without markdown artifacts
     return (
-      <p key={`${keyPrefix}-p-${i}`} className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+      <p key={stableKey} className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
         <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content) }} />
       </p>
     )
   })
 }
 
-function renderContent(content: string) {
+function renderContent(content: string, uniqueId: string): React.ReactNode[] {
   const codeBlocks = extractCodeBlocks(content)
 
   if (codeBlocks.length === 0) {
-    return renderTextContent(content, 'content')
+    return renderTextContent(content, `${uniqueId}-content`)
   }
 
   const elements: React.ReactNode[] = []
@@ -145,18 +152,18 @@ function renderContent(content: string) {
     if (block.startIndex > lastIndex) {
       const textBefore = content.slice(lastIndex, block.startIndex).trim()
       if (textBefore) {
-        elements.push(...renderTextContent(textBefore, `before-${index}`))
+        elements.push(...renderTextContent(textBefore, `${uniqueId}-before-${index}`))
       }
     }
 
-    elements.push(<CodeBlock key={`code-${index}`} language={block.language} code={block.code} />)
+    elements.push(<CodeBlock key={`${uniqueId}-code-${index}`} language={block.language} code={block.code} />)
     lastIndex = block.endIndex
   })
 
   if (lastIndex < content.length) {
     const textAfter = content.slice(lastIndex).trim()
     if (textAfter) {
-      elements.push(...renderTextContent(textAfter, 'after'))
+      elements.push(...renderTextContent(textAfter, `${uniqueId}-after`))
     }
   }
 
@@ -164,7 +171,9 @@ function renderContent(content: string) {
 }
 
 export function MessageBubble({ role, content }: MessageBubbleProps) {
-  const renderedContent = useMemo(() => renderContent(content), [content])
+  // Use stable ID for hydration safety
+  const id = useId()
+  const renderedContent = useMemo(() => renderContent(content, id), [content, id])
 
   return (
     <div

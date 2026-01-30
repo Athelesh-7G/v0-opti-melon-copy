@@ -141,19 +141,71 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ============================================
+   HYDRATION-SAFE MELON BACKGROUND
+   Pure CSS - No JavaScript - No hydration issues
+   ============================================ */
+
+/* Dark mode background with layered melon gradients */
+.dark body {
+  --bg-primary: #0A0A0B;
+  --bg-secondary: #0D0D0F;
   
-  /* Radial gradient background */
-  body::before {
+  background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(255, 107, 107, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      1000px 500px at 90% 20%,
+      rgba(255, 179, 179, 0.10),
+      transparent 65%
+    ),
+    radial-gradient(
+      800px 400px at 50% 90%,
+      rgba(152, 216, 200, 0.08),
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      var(--bg-primary),
+      var(--bg-secondary)
+    );
+  background-attachment: fixed;
+}
+
+/* Subtle GPU-safe gradient drift - CSS only animation */
+@media (prefers-reduced-motion: no-preference) {
+  .dark body::before {
     content: '';
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(ellipse at top, rgba(255, 107, 107, 0.1), transparent 50%);
+    inset: 0;
     pointer-events: none;
     z-index: 0;
+    background: linear-gradient(
+      120deg,
+      rgba(255, 107, 107, 0.06),
+      rgba(255, 179, 179, 0.04),
+      rgba(152, 216, 200, 0.05)
+    );
+    animation: melon-drift 40s ease-in-out infinite;
+    will-change: transform;
   }
+
+  @keyframes melon-drift {
+    0%   { transform: translate3d(0, 0, 0); }
+    50%  { transform: translate3d(-2%, -1%, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+  }
+}
+
+/* Ensure content stays above background */
+.dark body > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Custom scrollbar for the melon theme */
