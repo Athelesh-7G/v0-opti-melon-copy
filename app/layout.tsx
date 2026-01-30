@@ -1,11 +1,15 @@
 import React from "react"
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+import { Geist_Mono, Bebas_Neue as V0_Font_Bebas_Neue, Geist_Mono as V0_Font_Geist_Mono, Crimson_Text as V0_Font_Crimson_Text } from 'next/font/google'
+
+// Initialize fonts
+const _bebasNeue = V0_Font_Bebas_Neue({ subsets: ['latin'], weight: ["400"] })
+const _geistMono = V0_Font_Geist_Mono({ subsets: ['latin'], weight: ["100","200","300","400","500","600","700","800","900"] })
+const _crimsonText = V0_Font_Crimson_Text({ subsets: ['latin'], weight: ["400","600","700"] })
 
 export const metadata: Metadata = {
   title: 'OptiMelon - High-Signal LLM Wrapper',
