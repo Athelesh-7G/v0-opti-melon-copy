@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Send, Loader2, Sparkles, Square, PanelLeft } from "lucide-react"
+import { Send, Loader2, Sparkles, Square, PanelLeft, Code, Pen, Brain, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { MessageBubble } from "./MessageBubble"
@@ -404,33 +404,38 @@ export function ChatWindow() {
                 <span className="text-7xl" role="img" aria-label="watermelon">🍉</span>
                 <Sparkles className="absolute -top-2 -right-2 w-6 h-6 animate-pulse" style={{ color: 'var(--melon-green)' }} />
               </div>
-              <h2 className="text-2xl font-bold mb-3" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-                Welcome to OptiMelon
+              <h2 className="text-3xl font-bold mb-2 tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                OPTI MELON
               </h2>
-              <p className="max-w-lg mb-4 leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                Harness the full power of open-source AI models across multiple providers.
-                From coding and reasoning to document analysis and creative tasks.
+              <p className="text-lg font-medium mb-4" style={{ color: 'var(--melon-coral)' }}>
+                Ultimate AI Platform
+              </p>
+              <p className="max-w-lg mb-5 leading-relaxed text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                10+ elite models &bull; Massive context &bull; Max performance
               </p>
               <div className="flex flex-wrap justify-center gap-2 mb-6 max-w-md">
-                <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(152, 216, 200, 0.15)', color: 'var(--melon-green)' }}>
-                  10+ Models
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(152, 216, 200, 0.15)', color: 'var(--melon-green)' }}>
+                  <Code className="h-3 w-3" /> Coders
                 </span>
-                <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255, 107, 107, 0.15)', color: 'var(--melon-coral)' }}>
-                  Up to 1M Context
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(255, 107, 107, 0.15)', color: 'var(--melon-coral)' }}>
+                  <Pen className="h-3 w-3" /> Creators
                 </span>
-                <span className="px-2.5 py-1 rounded-full text-xs font-medium" style={{ background: 'rgba(255, 179, 179, 0.15)', color: 'var(--melon-pink)' }}>
-                  File Uploads
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(255, 179, 179, 0.15)', color: 'var(--melon-pink)' }}>
+                  <Brain className="h-3 w-3" /> Reasoning
+                </span>
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(152, 216, 200, 0.12)', color: 'var(--melon-green)' }}>
+                  <Globe className="h-3 w-3" /> Enterprise
                 </span>
               </div>
-              <p className="text-xs mb-6 max-w-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                Select your model below, attach files, and start chatting. Each model is optimized for specific tasks - click the info icon to see specs.
+              <p className="text-xs mb-6 max-w-sm" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
+                Upload files &bull; Switch instantly &bull; Chat now
               </p>
               <div className="flex flex-wrap justify-center gap-3">
                 {[
-                  { text: "Help me code", icon: "💻" },
-                  { text: "Analyze a document", icon: "📄" },
-                  { text: "Explain a concept", icon: "📚" },
-                  { text: "Draft an email", icon: "✉️" },
+                  { text: "Help me code", icon: "code" },
+                  { text: "Create content", icon: "pen" },
+                  { text: "Analyze this", icon: "brain" },
+                  { text: "Business task", icon: "globe" },
                 ].map((suggestion) => (
                   <button
                     key={suggestion.text}
@@ -442,7 +447,10 @@ export function ChatWindow() {
                       color: 'rgba(255, 255, 255, 0.85)'
                     }}
                   >
-                    <span>{suggestion.icon}</span>
+                    {suggestion.icon === "code" && <Code className="h-3.5 w-3.5" />}
+                    {suggestion.icon === "pen" && <Pen className="h-3.5 w-3.5" />}
+                    {suggestion.icon === "brain" && <Brain className="h-3.5 w-3.5" />}
+                    {suggestion.icon === "globe" && <Globe className="h-3.5 w-3.5" />}
                     <span>{suggestion.text}</span>
                   </button>
                 ))}
@@ -548,8 +556,12 @@ export function ChatWindow() {
             )}
           </div>
           
-          {/* Bottom toolbar with model selector and upload buttons */}
+          {/* Bottom toolbar with model selector (left) and upload (right) */}
           <div className="flex items-center justify-between mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+            <ChatModelSelector
+              selectedModel={model}
+              onModelChange={setModel}
+            />
             <div className="flex items-center gap-2">
               <FileUpload
                 files={[]}
@@ -557,10 +569,6 @@ export function ChatWindow() {
                 disabled={isLoading}
               />
             </div>
-            <ChatModelSelector
-              selectedModel={model}
-              onModelChange={setModel}
-            />
           </div>
         </div>
       </footer>

@@ -1,183 +1,228 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Info, Cpu, Sparkles, Code, FileText, Brain } from "lucide-react"
+import { ChevronDown, Code, Pen, Brain, Globe, Sparkles } from "lucide-react"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { ModelSpecsDialog } from "./ModelSpecsDialog"
-import { AVAILABLE_MODELS, getModelById, type ModelInfo } from "@/lib/models"
+  AVAILABLE_MODELS,
+  MODEL_CATEGORIES,
+  getModelById,
+  getModelsByCategory,
+  type ModelCategory,
+  type ModelInfo,
+} from "@/lib/models"
 
 interface ChatModelSelectorProps {
   selectedModel: string
   onModelChange: (modelId: string) => void
 }
 
-// Icon mapping for different model types
-function getModelIcon(model: ModelInfo) {
-  const tags = model.tags.map((t) => t.toLowerCase())
-  if (tags.includes("coding") || tags.includes("code")) {
-    return <Code className="h-3.5 w-3.5" />
+// Category icon mapping
+function getCategoryIcon(categoryId: ModelCategory) {
+  switch (categoryId) {
+    case "general":
+      return <Sparkles className="h-3.5 w-3.5" />
+    case "coders":
+      return <Code className="h-3.5 w-3.5" />
+    case "creators":
+      return <Pen className="h-3.5 w-3.5" />
+    case "reasoning":
+      return <Brain className="h-3.5 w-3.5" />
+    case "enterprise":
+      return <Globe className="h-3.5 w-3.5" />
+    default:
+      return <Sparkles className="h-3.5 w-3.5" />
   }
-  if (tags.includes("reasoning") || tags.includes("research")) {
-    return <Brain className="h-3.5 w-3.5" />
+}
+
+// Category label with emoji
+function getCategoryLabel(categoryId: ModelCategory) {
+  switch (categoryId) {
+    case "general":
+      return "General"
+    case "coders":
+      return "Coders"
+    case "creators":
+      return "Creators"
+    case "reasoning":
+      return "Reasoning"
+    case "enterprise":
+      return "Enterprise"
+    default:
+      return categoryId
   }
-  if (tags.includes("document analysis") || tags.includes("long context")) {
-    return <FileText className="h-3.5 w-3.5" />
-  }
-  return <Sparkles className="h-3.5 w-3.5" />
 }
 
 export function ChatModelSelector({
   selectedModel,
   onModelChange,
 }: ChatModelSelectorProps) {
-  const [specsOpen, setSpecsOpen] = useState(false)
-  const [selectedModelForSpecs, setSelectedModelForSpecs] =
-    useState<ModelInfo | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [activeCategory, setActiveCategory] = useState<ModelCategory>("general")
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  // Get current model info
   const currentModel = getModelById(selectedModel)
 
-  const handleOpenSpecs = (e: React.MouseEvent, modelId: string) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const model = getModelById(modelId)
-    if (model) {
-      setSelectedModelForSpecs(model)
-      setSpecsOpen(true)
+  // Get models for active category
+  const categoryModels = getModelsByCategory(activeCategory)
+
+  // Find current model's category to highlight the right tab
+  useEffect(() => {
+    if (currentModel) {
+      setActiveCategory(currentModel.category)
     }
+  }, [currentModel])
+
+  const handleModelSelect = (modelId: string) => {
+    onModelChange(modelId)
+    setIsOpen(false)
   }
 
   return (
-    <>
-      <div className="flex items-center gap-1">
-        <Select value={selectedModel} onValueChange={onModelChange}>
-          <SelectTrigger
-            className="h-8 px-2.5 gap-1.5 text-xs font-medium rounded-lg border transition-all duration-200 w-auto min-w-0"
+    <div className="relative">
+      {/* Trigger Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 hover:border-[var(--melon-green)] text-left"
+        style={{
+          background: "rgba(26, 26, 31, 0.6)",
+          borderColor: isOpen ? "var(--melon-green)" : "rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        <span
+          className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center"
+          style={{ background: "rgba(255, 107, 107, 0.12)", color: "var(--melon-coral)" }}
+        >
+          {currentModel ? getCategoryIcon(currentModel.category) : <Sparkles className="h-3.5 w-3.5" />}
+        </span>
+        <span className="text-sm font-medium truncate max-w-[140px]" style={{ color: "rgba(255, 255, 255, 0.9)" }}>
+          {mounted ? (currentModel?.name || "Select Model") : "Select Model"}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          style={{ color: "rgba(255, 255, 255, 0.5)" }}
+        />
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Dropdown Content */}
+          <div
+            className="absolute bottom-full left-0 mb-2 z-50 w-[320px] rounded-xl border shadow-xl overflow-hidden"
             style={{
-              background: "rgba(26, 26, 31, 0.6)",
+              background: "rgba(26, 26, 31, 0.98)",
               borderColor: "rgba(255, 255, 255, 0.1)",
-              color: "rgba(255, 255, 255, 0.85)",
+              backdropFilter: "blur(20px)",
             }}
           >
-            <Cpu className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "var(--melon-coral)" }} />
-            <span className="truncate max-w-[120px] sm:max-w-[180px]">
-              {mounted ? (currentModel?.name || "Select model") : "Select model"}
-            </span>
-          </SelectTrigger>
-        <SelectContent
-          className="max-h-[400px] overflow-y-auto glass-card"
-          style={{
-            background: "rgba(26, 26, 31, 0.95)",
-            borderColor: "rgba(255, 255, 255, 0.1)",
-          }}
-        >
-          {AVAILABLE_MODELS.map((model) => (
-            <SelectItem
-              key={model.id}
-              value={model.id}
-              className="py-2.5 px-2 cursor-pointer rounded-md transition-colors group"
+            {/* Category Tabs */}
+            <div
+              className="flex gap-1 p-2 border-b overflow-x-auto scrollbar-none"
+              style={{ borderColor: "rgba(255, 255, 255, 0.08)" }}
             >
-              <div className="flex items-center justify-between w-full gap-2">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span
-                    className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center"
-                    style={{ background: "rgba(255, 107, 107, 0.12)" }}
-                  >
-                    {getModelIcon(model)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div
-                      className="text-sm font-medium truncate"
-                      style={{ color: "rgba(255, 255, 255, 0.9)" }}
-                    >
-                      {model.name}
-                    </div>
-                    <div
-                      className="text-[10px] truncate"
-                      style={{ color: "rgba(255, 255, 255, 0.5)" }}
-                    >
-                      {model.contextLength} context
-                    </div>
-                  </div>
-                </div>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  className="h-6 w-6 flex-shrink-0 flex items-center justify-center rounded hover:bg-white/10 transition-colors cursor-pointer"
-                  onPointerDown={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
+              {MODEL_CATEGORIES.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap ${
+                    activeCategory === category.id
+                      ? "ring-1 ring-[var(--melon-green)]"
+                      : "hover:bg-white/5"
+                  }`}
+                  style={{
+                    background:
+                      activeCategory === category.id
+                        ? "rgba(152, 216, 200, 0.15)"
+                        : "transparent",
+                    color:
+                      activeCategory === category.id
+                        ? "var(--melon-green)"
+                        : "rgba(255, 255, 255, 0.6)",
                   }}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    const modelData = getModelById(model.id)
-                    if (modelData) {
-                      setSelectedModelForSpecs(modelData)
-                      setSpecsOpen(true)
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      const modelData = getModelById(model.id)
-                      if (modelData) {
-                        setSelectedModelForSpecs(modelData)
-                        setSpecsOpen(true)
-                      }
-                    }
-                  }}
-                  style={{ color: "var(--melon-green)" }}
-                  title="View specs"
-                  aria-label={`View specs for ${model.name}`}
                 >
-                  <Info className="h-3.5 w-3.5" />
-                </div>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-        
-        {/* Specs button for current model */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 rounded-lg border transition-all duration-200 hover:border-[var(--melon-green)]"
-          style={{
-            background: "rgba(26, 26, 31, 0.6)",
-            borderColor: "rgba(255, 255, 255, 0.1)",
-            color: "var(--melon-green)",
-          }}
-          onClick={(e) => {
-            if (currentModel) {
-              handleOpenSpecs(e, currentModel.id)
-            }
-          }}
-          title="View model specs"
-          aria-label="View model specs"
-        >
-          <Info className="h-4 w-4" />
-        </Button>
-      </div>
+                  {getCategoryIcon(category.id)}
+                  <span>{getCategoryLabel(category.id)}</span>
+                </button>
+              ))}
+            </div>
 
-      <ModelSpecsDialog
-        model={selectedModelForSpecs}
-        open={specsOpen}
-        onOpenChange={setSpecsOpen}
-      />
-    </>
+            {/* Models List */}
+            <div className="max-h-[240px] overflow-y-auto scrollbar-melon p-2">
+              {categoryModels.length > 0 ? (
+                <div className="space-y-1">
+                  {categoryModels.map((model) => (
+                    <button
+                      key={model.id}
+                      onClick={() => handleModelSelect(model.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-left ${
+                        selectedModel === model.id
+                          ? "ring-1 ring-[var(--melon-coral)]"
+                          : "hover:bg-white/5"
+                      }`}
+                      style={{
+                        background:
+                          selectedModel === model.id
+                            ? "rgba(255, 107, 107, 0.1)"
+                            : "transparent",
+                      }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="text-sm font-medium truncate"
+                          style={{ color: "rgba(255, 255, 255, 0.95)" }}
+                        >
+                          {model.name}
+                        </div>
+                        <div
+                          className="text-[11px] truncate mt-0.5"
+                          style={{ color: "rgba(255, 255, 255, 0.5)" }}
+                        >
+                          {model.contextLength} context
+                        </div>
+                      </div>
+                      {selectedModel === model.id && (
+                        <div
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ background: "var(--melon-coral)" }}
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="text-center py-6 text-sm"
+                  style={{ color: "rgba(255, 255, 255, 0.5)" }}
+                >
+                  No models in this category
+                </div>
+              )}
+            </div>
+
+            {/* Footer hint */}
+            <div
+              className="px-3 py-2 border-t text-[10px]"
+              style={{
+                borderColor: "rgba(255, 255, 255, 0.08)",
+                color: "rgba(255, 255, 255, 0.4)",
+              }}
+            >
+              10 elite models across 5 categories
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   )
 }
