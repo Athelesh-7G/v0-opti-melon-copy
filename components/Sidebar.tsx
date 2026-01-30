@@ -90,7 +90,7 @@ export function Sidebar({
       >
         {/* Sidebar Header */}
         <div className="flex items-center gap-2 p-3 border-b" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
-          <span className="text-lg" role="img" aria-label="watermelon">🍉</span>
+          <span className="text-lg grayscale" role="img" aria-label="watermelon">🍉</span>
           <span className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Chats</span>
         </div>
         

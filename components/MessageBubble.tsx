@@ -212,7 +212,7 @@ export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubblePr
         {role === "user" ? (
           <User className="h-4 w-4" />
         ) : (
-          <span className="text-sm" role="img" aria-label="assistant">🍉</span>
+          <span className="text-sm grayscale" role="img" aria-label="assistant">🍉</span>
         )}
       </div>
       <div className={`flex-1 max-w-[85%] ${role === "user" ? "ml-auto" : ""}`}>
