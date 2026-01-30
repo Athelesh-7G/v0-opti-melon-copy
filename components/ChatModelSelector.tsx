@@ -112,10 +112,28 @@ export function ChatModelSelector({
                   role="button"
                   tabIndex={0}
                   className="h-6 w-6 flex-shrink-0 flex items-center justify-center rounded hover:bg-white/10 transition-colors cursor-pointer"
-                  onClick={(e) => handleOpenSpecs(e, model.id)}
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    const modelData = getModelById(model.id)
+                    if (modelData) {
+                      setSelectedModelForSpecs(modelData)
+                      setSpecsOpen(true)
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
-                      handleOpenSpecs(e as unknown as React.MouseEvent, model.id)
+                      e.preventDefault()
+                      e.stopPropagation()
+                      const modelData = getModelById(model.id)
+                      if (modelData) {
+                        setSelectedModelForSpecs(modelData)
+                        setSpecsOpen(true)
+                      }
                     }
                   }}
                   style={{ color: "var(--melon-green)" }}
