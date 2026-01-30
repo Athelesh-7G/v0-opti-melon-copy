@@ -378,8 +378,6 @@ export function ChatWindow() {
                 ))}
               </div>
             </div>
-                <Sparkles className="absolute -top-2 -right-2 w-6 h-6 animate-pulse" style={{ color: 'var(--melon-green)' }} />
-              </div>
               <h2 className="text-2xl font-bold mb-3" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
                 Welcome to OptiMelon
               </h2>
