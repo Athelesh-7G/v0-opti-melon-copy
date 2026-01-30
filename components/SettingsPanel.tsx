@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Settings, X, ChevronDown, ChevronUp, Trash2 } from "lucide-react"
+import { Settings, X, ChevronDown, ChevronUp, Trash2, Sun, Moon, Monitor } from "lucide-react"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
@@ -48,6 +49,7 @@ export function SettingsPanel({
   onClearChat,
 }: SettingsPanelProps) {
   const [promptOpen, setPromptOpen] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   return (
     <>
@@ -83,6 +85,46 @@ export function SettingsPanel({
               </div>
 
               <div className="space-y-6">
+                {/* Theme Selection */}
+                <div className="p-4 rounded-2xl bg-secondary/30 border border-border">
+                  <h3 className="text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wide">Theme</h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setTheme("light")}
+                      className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
+                        theme === "light"
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      <Sun className="h-4 w-4" />
+                      <span className="text-sm font-medium">Light</span>
+                    </button>
+                    <button
+                      onClick={() => setTheme("dark")}
+                      className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
+                        theme === "dark"
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      <Moon className="h-4 w-4" />
+                      <span className="text-sm font-medium">Dark</span>
+                    </button>
+                    <button
+                      onClick={() => setTheme("system")}
+                      className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-200 ${
+                        theme === "system"
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-secondary/50 border-border text-muted-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      <Monitor className="h-4 w-4" />
+                      <span className="text-sm font-medium">System</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Model Selection */}
                 <div className="p-4 rounded-2xl bg-secondary/30 border border-border">
                   <h3 className="text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-wide">Model</h3>

@@ -81,17 +81,16 @@ export function Sidebar({
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           w-[260px] h-screen flex flex-col border-r
           transition-transform duration-300 ease-in-out
+          bg-sidebar border-sidebar-border
         `}
         style={{ 
-          borderColor: "rgba(255, 255, 255, 0.06)", 
-          background: 'rgba(18, 18, 20, 0.98)', 
           backdropFilter: 'blur(20px)' 
         }}
       >
         {/* Sidebar Header */}
-        <div className="flex items-center gap-2 p-3 border-b" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
+        <div className="flex items-center gap-2 p-3 border-b border-sidebar-border">
           <span className="text-lg" role="img" aria-label="watermelon">🍉</span>
-          <span className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Chats</span>
+          <span className="text-sm font-medium text-sidebar-foreground">Chats</span>
         </div>
         
         {/* New Chat Button */}
@@ -110,10 +109,7 @@ export function Sidebar({
       <nav className="flex-1 overflow-y-auto scrollbar-melon p-1.5">
         <div className="space-y-0.5">
           {chats.length === 0 ? (
-            <div
-              className="text-center py-6 px-3"
-              style={{ color: "rgba(255, 255, 255, 0.4)" }}
-            >
+            <div className="text-center py-6 px-3 text-muted-foreground">
               <p className="text-xs">No history</p>
             </div>
           ) : (
@@ -122,48 +118,21 @@ export function Sidebar({
               return (
                 <div
                   key={chat.id}
-                  className={`group relative rounded-md p-2 cursor-pointer transition-all duration-150 ${
-                    isActive ? "border-l-2" : ""
+                  className={`group relative rounded-md p-2 cursor-pointer transition-all duration-150 hover:bg-sidebar-accent ${
+                    isActive ? "border-l-2 bg-primary/10 border-primary" : ""
                   }`}
-                  style={
-                    isActive
-                      ? {
-                          background: "rgba(255, 107, 107, 0.08)",
-                          borderColor: "rgba(255, 107, 107, 0.6)",
-                        }
-                      : {
-                          background: "transparent",
-                        }
-                  }
                   onClick={() => handleSelectChat(chat.id)}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background =
-                        "rgba(255, 255, 255, 0.02)"
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = "transparent"
-                    }
-                  }}
                 >
                   <div className="flex items-start justify-between gap-1.5">
                     <div className="flex-1 min-w-0">
                       <h4
-                        className="text-xs font-medium truncate"
-                        style={{
-                          color: isActive
-                            ? "rgba(255, 255, 255, 0.9)"
-                            : "rgba(255, 255, 255, 0.7)",
-                        }}
+                        className={`text-xs font-medium truncate ${
+                          isActive ? "text-sidebar-foreground" : "text-sidebar-foreground/70"
+                        }`}
                       >
                         {chat.title}
                       </h4>
-                      <p
-                        className="text-[10px] mt-0.5"
-                        style={{ color: "rgba(255, 255, 255, 0.4)" }}
-                      >
+                      <p className="text-[10px] mt-0.5 text-muted-foreground">
                         {formatDistanceToNow(chat.updatedAt, {
                           addSuffix: true,
                         })}
@@ -177,10 +146,7 @@ export function Sidebar({
                       className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/20 transition-opacity"
                       aria-label="Delete chat"
                     >
-                      <Trash2
-                        className="h-3 w-3"
-                        style={{ color: "rgba(255, 107, 107, 0.8)" }}
-                      />
+                      <Trash2 className="h-3 w-3 text-destructive" />
                     </button>
                   </div>
                 </div>
@@ -191,23 +157,14 @@ export function Sidebar({
       </nav>
 
       {/* Sidebar Footer */}
-      <div
-        className="p-3 border-t space-y-3"
-        style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}
-      >
+      <div className="p-3 border-t border-sidebar-border space-y-3">
         {/* Creator Block */}
         <div className="space-y-2">
           <div>
-            <h3 
-              className="text-xs font-semibold"
-              style={{ color: "rgba(255, 255, 255, 0.9)" }}
-            >
+            <h3 className="text-xs font-semibold text-sidebar-foreground">
               Athelesh Balachandran
             </h3>
-            <p 
-              className="text-[10px]"
-              style={{ color: "rgba(255, 255, 255, 0.5)" }}
-            >
+            <p className="text-[10px] text-muted-foreground">
               Creator of OptiMelon
             </p>
           </div>
@@ -216,8 +173,7 @@ export function Sidebar({
               href="https://www.linkedin.com/in/athelesh-balachandran-60a07927a"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-md hover:bg-white/5 transition-colors"
-              style={{ color: "rgba(255, 255, 255, 0.6)" }}
+              className="p-1.5 rounded-md hover:bg-sidebar-accent transition-colors text-muted-foreground hover:text-sidebar-foreground"
               aria-label="LinkedIn"
             >
               <Linkedin className="h-3.5 w-3.5" />
@@ -226,16 +182,14 @@ export function Sidebar({
               href="https://www.instagram.com/athelesh_balachandran/"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-md hover:bg-white/5 transition-colors"
-              style={{ color: "rgba(255, 255, 255, 0.6)" }}
+              className="p-1.5 rounded-md hover:bg-sidebar-accent transition-colors text-muted-foreground hover:text-sidebar-foreground"
               aria-label="Instagram"
             >
               <Instagram className="h-3.5 w-3.5" />
             </a>
             <a
               href="mailto:atheleshbalachandran14@gmail.com"
-              className="p-1.5 rounded-md hover:bg-white/5 transition-colors"
-              style={{ color: "rgba(255, 255, 255, 0.6)" }}
+              className="p-1.5 rounded-md hover:bg-sidebar-accent transition-colors text-muted-foreground hover:text-sidebar-foreground"
               aria-label="Email"
             >
               <Mail className="h-3.5 w-3.5" />
@@ -247,8 +201,7 @@ export function Sidebar({
         <Button
           onClick={onOpenSettings}
           variant="ghost"
-          className="w-full justify-start hover:bg-white/5 transition-colors text-xs"
-          style={{ color: "rgba(255, 255, 255, 0.6)" }}
+          className="w-full justify-start hover:bg-sidebar-accent transition-colors text-xs text-muted-foreground"
         >
           <Settings className="h-3.5 w-3.5 mr-2" />
           Settings

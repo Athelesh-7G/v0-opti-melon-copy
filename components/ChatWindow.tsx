@@ -368,28 +368,27 @@ export function ChatWindow() {
         style={{ marginLeft: !isMobile && sidebarOpen ? '260px' : '0' }}
       >
         {/* Header with glass effect */}
-        <header className="flex-shrink-0 border-b px-4 py-3 glass-card relative z-10" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+        <header className="flex-shrink-0 border-b border-border px-4 py-3 glass-card relative z-10">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-4">
               {/* Claude-style sidebar toggle */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg transition-all duration-200 hover:bg-white/5"
-                style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                className="p-2 rounded-lg transition-all duration-200 hover:bg-secondary text-muted-foreground"
                 aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
               >
                 <PanelLeft className="h-5 w-5" />
               </button>
               <div className="flex items-center gap-1">
                 <span className="text-xl" role="img" aria-label="watermelon">🍉</span>
-                <h1 className="text-base font-semibold tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                <h1 className="text-base font-semibold tracking-tight text-foreground">
                   OptiMelon
                 </h1>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
-                <span className="text-xs font-mono truncate max-w-[140px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{getModelDisplayName(model)}</span>
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-secondary/50">
+                <span className="text-xs font-mono truncate max-w-[140px] text-muted-foreground">{getModelDisplayName(model)}</span>
               </div>
             </div>
           </div>
@@ -404,27 +403,27 @@ export function ChatWindow() {
                 <span className="text-7xl" role="img" aria-label="watermelon">🍉</span>
                 <Sparkles className="absolute -top-2 -right-2 w-6 h-6 animate-pulse" style={{ color: 'var(--melon-green)' }} />
               </div>
-              <h2 className="text-3xl font-bold mb-4 tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+              <h2 className="text-3xl font-bold mb-4 tracking-tight text-foreground">
                 Welcome to OptiMelon
               </h2>
-              <p className="max-w-lg mb-5 leading-relaxed text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+              <p className="max-w-lg mb-5 leading-relaxed text-sm text-muted-foreground">
                 10+ elite models &bull; Massive context &bull; Max performance
               </p>
               <div className="flex flex-wrap justify-center gap-2 mb-6 max-w-md">
-                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(152, 216, 200, 0.15)', color: 'var(--melon-green)' }}>
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 bg-accent/15 text-accent">
                   <Code className="h-3 w-3" /> Coders
                 </span>
-                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(248, 113, 113, 0.15)', color: '#F87171' }}>
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 bg-primary/15 text-primary">
                   <Pen className="h-3 w-3" /> Creators
                 </span>
-                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(152, 216, 200, 0.12)', color: 'var(--melon-green)' }}>
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 bg-accent/15 text-accent">
                   <Brain className="h-3 w-3" /> Reasoning
                 </span>
-                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5" style={{ background: 'rgba(248, 113, 113, 0.15)', color: '#F87171' }}>
+                <span className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 bg-primary/15 text-primary">
                   <Globe className="h-3 w-3" /> Enterprise
                 </span>
               </div>
-              <p className="text-xs mb-6 max-w-sm" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
+              <p className="text-xs mb-6 max-w-sm text-muted-foreground">
                 Upload files &bull; Switch instantly &bull; Chat now
               </p>
               <div className="flex flex-wrap justify-center gap-3">
@@ -437,12 +436,7 @@ export function ChatWindow() {
                   <button
                     key={suggestion.text}
                     onClick={() => setInput(suggestion.text)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 text-sm hover:scale-105"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      borderColor: 'rgba(255, 255, 255, 0.08)',
-                      color: 'rgba(255, 255, 255, 0.85)'
-                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:bg-secondary transition-all duration-200 text-sm hover:scale-105 text-foreground"
                   >
                     {suggestion.icon === "code" && <Code className="h-3.5 w-3.5" />}
                     {suggestion.icon === "pen" && <Pen className="h-3.5 w-3.5" />}
@@ -465,20 +459,20 @@ export function ChatWindow() {
               ))}
               {isLoading && messages[messages.length - 1]?.role === "user" && (
                 <div className="flex gap-3" style={{ animation: 'messageEnter 0.3s ease-out' }}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(152, 216, 200, 0.15)', color: 'var(--melon-green)' }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-accent/15 text-accent">
                     <Loader2 className="h-4 w-4 animate-spin" />
                   </div>
-                  <div className="border rounded-2xl px-4 py-3 shadow-sm" style={{ background: 'rgba(26, 26, 31, 0.4)', borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+                  <div className="border border-border rounded-2xl px-4 py-3 shadow-sm bg-card">
                     <div className="flex items-center gap-2">
-                      <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Generating response</span>
+                      <span className="text-foreground/70">Generating response</span>
                       <span className="flex gap-1" aria-hidden="true">
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#F87171', animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#F87171', animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#F87171', animationDelay: "300ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce bg-primary" style={{ animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce bg-primary" style={{ animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce bg-primary" style={{ animationDelay: "300ms" }} />
                       </span>
                     </div>
-                    <p className="text-xs mt-1 hidden sm:block" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
-                      Press <kbd className="px-1 py-0.5 rounded text-[10px] border" style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }}>Esc</kbd> to stop
+                    <p className="text-xs mt-1 hidden sm:block text-muted-foreground">
+                      Press <kbd className="px-1 py-0.5 rounded text-[10px] border border-border bg-secondary">Esc</kbd> to stop
                     </p>
                   </div>
                 </div>
@@ -499,7 +493,7 @@ export function ChatWindow() {
       )}
 
       {/* Input area */}
-      <footer className="flex-shrink-0 border-t px-4 py-3 sticky bottom-0" style={{ borderColor: 'rgba(255, 255, 255, 0.08)', background: 'rgba(26, 26, 31, 0.6)', backdropFilter: 'blur(24px) saturate(180%)' }}>
+      <footer className="flex-shrink-0 border-t border-border px-4 py-3 sticky bottom-0 bg-card/80 backdrop-blur-xl">
         <div className="max-w-4xl mx-auto">
           {/* File previews above input */}
           {uploadedFiles.length > 0 && (

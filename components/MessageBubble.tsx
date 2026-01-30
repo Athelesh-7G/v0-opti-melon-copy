@@ -22,17 +22,14 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   }, [code])
 
   return (
-    <div className="my-3 rounded-xl border border-border overflow-hidden shadow-sm" style={{ background: 'rgba(10, 10, 11, 0.8)' }}>
-      <div className="flex items-center justify-between px-4 py-2 text-sm border-b" style={{ background: 'rgba(255, 255, 255, 0.02)', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
-        <span className="font-mono text-xs uppercase font-medium" style={{ color: '#F87171' }}>{language || "code"}</span>
+    <div className="my-3 rounded-xl border border-border overflow-hidden shadow-sm bg-muted dark:bg-[rgba(10,10,11,0.8)]">
+      <div className="flex items-center justify-between px-4 py-2 text-sm border-b border-border bg-secondary/50">
+        <span className="font-mono text-xs uppercase font-medium text-primary">{language || "code"}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-all duration-200 border"
-          style={{ 
-            background: copied ? 'rgba(248, 113, 113, 0.1)' : 'transparent',
-            borderColor: copied ? 'var(--melon-red)' : 'rgba(255, 255, 255, 0.1)',
-            color: copied ? 'var(--melon-red)' : 'rgba(255, 255, 255, 0.6)'
-          }}
+          className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-all duration-200 border ${
+            copied ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground'
+          }`}
           aria-label={copied ? "Copied" : "Copy code"}
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -40,7 +37,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         </button>
       </div>
       <pre className="overflow-x-auto bg-secondary/30 p-4 scrollbar-melon">
-        <code className="text-sm font-mono leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{code}</code>
+        <code className="text-sm font-mono leading-relaxed text-foreground">{code}</code>
       </pre>
     </div>
   )
@@ -48,7 +45,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
 
 // Parse inline markdown with soft styling - clean rendering without artifacts
 // Safe for streaming: handles incomplete markdown gracefully
-function parseSoftInlineMarkdown(text: string): string {
+function parseSoftInlineMarkdown(text: string, isUser: boolean = false): string {
   // Escape HTML first to prevent XSS
   const escapeHtml = (str: string): string => {
     const entities: Record<string, string> = {
@@ -60,7 +57,12 @@ function parseSoftInlineMarkdown(text: string): string {
   let result = escapeHtml(text)
   
   // Bold - only match complete ** pairs (non-greedy, requires closing **)
-  result = result.replace(/\*\*(.+?)\*\*/g, '<strong class="font-medium" style="color: rgba(255, 255, 255, 0.92);">$1</strong>')
+  // Use dark color for user messages, inherit for assistant (theme-aware)
+  if (isUser) {
+    result = result.replace(/\*\*(.+?)\*\*/g, '<strong class="font-medium" style="color: #1A1A1F;">$1</strong>')
+  } else {
+    result = result.replace(/\*\*(.+?)\*\*/g, '<strong class="font-medium text-foreground">$1</strong>')
+  }
   
   // Italic - only match complete single * pairs (not part of **)
   result = result.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, "<em>$1</em>")
@@ -81,8 +83,11 @@ function parseSoftInlineMarkdown(text: string): string {
   return result
 }
 
-function renderTextContent(text: string, keyPrefix: string): React.ReactNode[] {
+function renderTextContent(text: string, keyPrefix: string, role: "user" | "assistant" = "assistant"): React.ReactNode[] {
   const blocks = parseBlockMarkdown(text)
+  
+  // Use black/dark text for user messages, inherit foreground for assistant (works with themes)
+  const isUser = role === "user"
   
   return blocks.map((block, i) => {
     // Generate stable keys using index - no randomness
@@ -100,10 +105,10 @@ function renderTextContent(text: string, keyPrefix: string): React.ReactNode[] {
       return (
         <p 
           key={stableKey} 
-          className={headingStyles[level] ?? headingStyles[1]}
-          style={{ color: 'rgba(255, 255, 255, 0.9)' }}
+          className={`${headingStyles[level] ?? headingStyles[1]} ${isUser ? '' : 'text-foreground'}`}
+          style={isUser ? { color: '#1A1A1F' } : undefined}
         >
-          <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content) }} />
+          <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content, isUser) }} />
         </p>
       )
     }
@@ -112,10 +117,14 @@ function renderTextContent(text: string, keyPrefix: string): React.ReactNode[] {
       // Clean unordered list - no raw "-" or "*" visible
       const items = block.content.split('\n').filter(item => item.trim())
       return (
-        <ul key={stableKey} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'disc', color: 'rgba(255, 255, 255, 0.8)' }}>
+        <ul 
+          key={stableKey} 
+          className={`my-2 space-y-1 pl-5 list-disc ${isUser ? '' : 'text-foreground/80'}`}
+          style={isUser ? { color: '#1A1A1F' } : undefined}
+        >
           {items.map((item, j) => (
             <li key={`${stableKey}-item-${j}`} className="leading-relaxed text-sm">
-              <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item) }} />
+              <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item, isUser) }} />
             </li>
           ))}
         </ul>
@@ -126,10 +135,14 @@ function renderTextContent(text: string, keyPrefix: string): React.ReactNode[] {
       // Clean ordered list - no raw "1." visible
       const items = block.content.split('\n').filter(item => item.trim())
       return (
-        <ol key={stableKey} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'decimal', color: 'rgba(255, 255, 255, 0.8)' }}>
+        <ol 
+          key={stableKey} 
+          className={`my-2 space-y-1 pl-5 list-decimal ${isUser ? '' : 'text-foreground/80'}`}
+          style={isUser ? { color: '#1A1A1F' } : undefined}
+        >
           {items.map((item, j) => (
             <li key={`${stableKey}-item-${j}`} className="leading-relaxed text-sm">
-              <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item) }} />
+              <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item, isUser) }} />
             </li>
           ))}
         </ol>
@@ -138,18 +151,22 @@ function renderTextContent(text: string, keyPrefix: string): React.ReactNode[] {
     
     // Regular paragraph - clean text without markdown artifacts
     return (
-      <p key={stableKey} className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-        <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content) }} />
+      <p 
+        key={stableKey} 
+        className={`mb-3 last:mb-0 leading-relaxed ${isUser ? '' : 'text-foreground/85'}`}
+        style={isUser ? { color: '#1A1A1F' } : undefined}
+      >
+        <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content, isUser) }} />
       </p>
     )
   })
 }
 
-function renderContent(content: string, uniqueId: string): React.ReactNode[] {
+function renderContent(content: string, uniqueId: string, role: "user" | "assistant" = "assistant"): React.ReactNode[] {
   const codeBlocks = extractCodeBlocks(content)
 
   if (codeBlocks.length === 0) {
-    return renderTextContent(content, `${uniqueId}-content`)
+    return renderTextContent(content, `${uniqueId}-content`, role)
   }
 
   const elements: React.ReactNode[] = []
@@ -159,7 +176,7 @@ function renderContent(content: string, uniqueId: string): React.ReactNode[] {
     if (block.startIndex > lastIndex) {
       const textBefore = content.slice(lastIndex, block.startIndex).trim()
       if (textBefore) {
-        elements.push(...renderTextContent(textBefore, `${uniqueId}-before-${index}`))
+        elements.push(...renderTextContent(textBefore, `${uniqueId}-before-${index}`, role))
       }
     }
 
@@ -170,7 +187,7 @@ function renderContent(content: string, uniqueId: string): React.ReactNode[] {
   if (lastIndex < content.length) {
     const textAfter = content.slice(lastIndex).trim()
     if (textAfter) {
-      elements.push(...renderTextContent(textAfter, `${uniqueId}-after`))
+      elements.push(...renderTextContent(textAfter, `${uniqueId}-after`, role))
     }
   }
 
@@ -180,7 +197,7 @@ function renderContent(content: string, uniqueId: string): React.ReactNode[] {
 export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubbleProps) {
   // Use stable ID for hydration safety
   const id = useId()
-  const renderedContent = useMemo(() => renderContent(content, id), [content, id])
+  const renderedContent = useMemo(() => renderContent(content, id, role), [content, id, role])
   const [copied, setCopied] = useState(false)
 
   const handleCopy = useCallback(async () => {
@@ -205,9 +222,8 @@ export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubblePr
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${
           role === "user"
             ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground"
-            : "text-accent"
+            : "text-accent bg-accent/15"
         }`}
-        style={role === "assistant" ? { background: 'rgba(152, 216, 200, 0.15)' } : undefined}
       >
         {role === "user" ? (
           <User className="h-4 w-4" />
@@ -219,17 +235,9 @@ export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubblePr
         <div
           className={`rounded-2xl px-5 py-3.5 shadow-sm ${
             role === "user"
-              ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground border-l-2"
-              : "border"
+              ? "bg-gradient-to-br from-primary to-primary/90 border-l-2 border-l-primary"
+              : "border border-border bg-card"
           }`}
-          style={
-            role === "user" 
-              ? { borderLeftColor: 'var(--melon-red)' }
-              : { 
-                  background: 'rgba(26, 26, 31, 0.4)', 
-                  borderColor: 'rgba(255, 255, 255, 0.05)' 
-                }
-          }
         >
           <div className="max-w-none">
             {renderedContent}
@@ -241,11 +249,9 @@ export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubblePr
           <div className="flex justify-end gap-1.5 mt-2">
             <button
               onClick={handleCopy}
-              className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:bg-white/10"
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: copied ? 'var(--melon-green)' : 'rgba(255, 255, 255, 0.5)'
-              }}
+              className={`p-1.5 rounded-md transition-all duration-200 hover:scale-105 bg-secondary hover:bg-secondary/80 ${
+                copied ? 'text-accent' : 'text-muted-foreground'
+              }`}
               aria-label={copied ? "Copied" : "Copy message"}
               title="Copy message"
             >
@@ -254,11 +260,7 @@ export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubblePr
             {onEdit && (
               <button
                 onClick={handleEdit}
-                className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:bg-white/10"
-                style={{ 
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: 'rgba(255, 255, 255, 0.5)'
-                }}
+                className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 bg-secondary hover:bg-secondary/80 text-muted-foreground"
                 aria-label="Edit message"
                 title="Edit message"
               >
@@ -273,11 +275,9 @@ export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubblePr
           <div className="flex justify-start gap-1.5 mt-2">
             <button
               onClick={handleCopy}
-              className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:bg-white/10"
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: copied ? 'var(--melon-green)' : 'rgba(255, 255, 255, 0.5)'
-              }}
+              className={`p-1.5 rounded-md transition-all duration-200 hover:scale-105 bg-secondary hover:bg-secondary/80 ${
+                copied ? 'text-accent' : 'text-muted-foreground'
+              }`}
               aria-label={copied ? "Copied" : "Copy response"}
               title="Copy response"
             >

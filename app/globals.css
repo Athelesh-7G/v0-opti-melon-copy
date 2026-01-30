@@ -11,39 +11,51 @@
 */
 
 :root {
-  --background: oklch(0.98 0.005 80);
-  --foreground: oklch(0.20 0.02 30);
-  --card: oklch(0.99 0.003 80);
-  --card-foreground: oklch(0.20 0.02 30);
-  --popover: oklch(0.99 0.003 80);
-  --popover-foreground: oklch(0.20 0.02 30);
-  --primary: oklch(0.65 0.20 15);
-  --primary-foreground: oklch(0.99 0.003 80);
-  --secondary: oklch(0.95 0.01 80);
-  --secondary-foreground: oklch(0.25 0.02 30);
-  --muted: oklch(0.94 0.01 80);
-  --muted-foreground: oklch(0.50 0.02 30);
-  --accent: oklch(0.72 0.15 170);
-  --accent-foreground: oklch(0.15 0.02 30);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.55 0.22 25);
-  --border: oklch(0.90 0.02 80);
-  --input: oklch(0.90 0.02 80);
-  --ring: oklch(0.65 0.20 15);
-  --chart-1: oklch(0.65 0.20 15);
-  --chart-2: oklch(0.72 0.15 170);
-  --chart-3: oklch(0.75 0.12 140);
-  --chart-4: oklch(0.80 0.10 100);
-  --chart-5: oklch(0.70 0.18 40);
+  /* Light Mode - Clean cream/white base with coral accents */
+  --background: #FAFAF9;
+  --foreground: #1A1A1F;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1F;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1F;
+  --primary: #EF4444;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F5F4;
+  --secondary-foreground: #1A1A1F;
+  --muted: #F0F0EE;
+  --muted-foreground: #6B6B73;
+  --accent: #4ECDC4;
+  --accent-foreground: #1A1A1F;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E5E3;
+  --input: #F5F5F4;
+  --ring: rgba(239, 68, 68, 0.5);
+  --chart-1: #EF4444;
+  --chart-2: #4ECDC4;
+  --chart-3: #F87171;
+  --chart-4: #98D8C8;
+  --chart-5: #FCA5A5;
   --radius: 0.75rem;
-  --sidebar: oklch(0.97 0.005 80);
-  --sidebar-foreground: oklch(0.20 0.02 30);
-  --sidebar-primary: oklch(0.65 0.20 15);
-  --sidebar-primary-foreground: oklch(0.99 0.003 80);
-  --sidebar-accent: oklch(0.93 0.02 80);
-  --sidebar-accent-foreground: oklch(0.25 0.02 30);
-  --sidebar-border: oklch(0.90 0.02 80);
-  --sidebar-ring: oklch(0.65 0.20 15);
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1A1F;
+  --sidebar-primary: #EF4444;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F5F5F4;
+  --sidebar-accent-foreground: #1A1A1F;
+  --sidebar-border: #E5E5E3;
+  --sidebar-ring: rgba(239, 68, 68, 0.5);
+  
+  /* Light Mode Melon Colors */
+  --melon-red: #EF4444;
+  --melon-coral: #F87171;
+  --melon-pink: #FCA5A5;
+  --melon-green: #4ECDC4;
+  
+  /* Light Mode Glass Surfaces */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-glow: rgba(239, 68, 68, 0.1);
 }
 
 .dark {
@@ -148,6 +160,27 @@
    Pure CSS - No JavaScript - No hydration issues
    ============================================ */
 
+/* Light mode background - subtle cream gradients */
+body {
+  background: 
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(239, 68, 68, 0.04),
+      transparent 60%
+    ),
+    radial-gradient(
+      1000px 500px at 90% 20%,
+      rgba(78, 205, 196, 0.04),
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      #FAFAF9,
+      #F5F5F4
+    );
+  background-attachment: fixed;
+}
+
 /* Dark mode background with layered melon gradients */
 .dark body {
   --bg-primary: #0A0A0B;
@@ -231,20 +264,26 @@
     backdrop-filter: blur(24px) saturate(180%);
     border: 1px solid var(--glass-border);
     box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  
+  .dark .glass-card {
+    box-shadow: 
       0 8px 32px rgba(0, 0, 0, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   
   .glass-input {
-    background: rgba(26, 26, 31, 0.8);
+    background: var(--input);
     backdrop-filter: blur(16px);
-    border: 1.5px solid rgba(239, 68, 68, 0.2);
+    border: 1.5px solid var(--border);
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   
   .glass-input:focus {
-    border-color: rgba(239, 68, 68, 0.6);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--ring);
     outline: none;
   }
   
