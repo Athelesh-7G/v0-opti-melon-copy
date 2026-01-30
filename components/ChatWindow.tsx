@@ -8,8 +8,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { MessageBubble } from "./MessageBubble"
 import { SettingsPanel } from "./SettingsPanel"
 import { Sidebar } from "./Sidebar"
-import { ThemeToggle } from "./ThemeToggle"
-import { AnimatedBackground } from "./AnimatedBackground"
 import { DEFAULT_SYSTEM_PROMPT, buildMessages } from "@/lib/promptTemplate"
 import {
   saveMessages,
@@ -307,10 +305,7 @@ export function ChatWindow() {
   }, [currentChatId, chats.length])
 
   return (
-    <div className="flex h-screen bg-background relative overflow-hidden">
-      {/* Animated Background */}
-      <AnimatedBackground />
-
+    <div className="flex h-screen bg-background relative">
       {/* Sidebar */}
       <Sidebar
         chats={chats}
@@ -322,62 +317,37 @@ export function ChatWindow() {
       />
 
       {/* Main Chat Panel */}
-      <div className="flex flex-col flex-1 min-w-0 relative z-10">
+      <div className="flex flex-col flex-1 min-w-0">
         {/* Header with glass effect */}
-        <header className="flex-shrink-0 border-b px-3 sm:px-4 py-3 sm:py-4 glass-card border-border">
-        <div className="max-w-4xl mx-auto flex items-center justify-between pl-12 md:pl-0">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl melon-gradient flex items-center justify-center shadow-md">
-              <span className="text-sm sm:text-base" role="img" aria-label="watermelon">🍉</span>
+        <header className="flex-shrink-0 border-b px-4 py-4 glass-card relative z-10" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl melon-gradient flex items-center justify-center" style={{ boxShadow: '0 2px 8px rgba(255, 107, 107, 0.2)' }}>
+              <span className="text-base" role="img" aria-label="watermelon">🍉</span>
             </div>
-            <h1 className="text-base sm:text-lg font-semibold tracking-tight text-foreground">
+            <h1 className="text-lg font-semibold tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
               OptiMelon
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-secondary/30">
-              <span className="text-xs font-mono truncate max-w-[140px] text-muted-foreground">{model.split("/").pop()}</span>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+              <span className="text-xs font-mono truncate max-w-[140px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{model.split("/").pop()}</span>
             </div>
-            <ThemeToggle />
           </div>
         </div>
       </header>
 
       {/* Messages area */}
       <main className="flex-1 overflow-y-auto scrollbar-melon relative">
-        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="max-w-4xl mx-auto px-4 py-6">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] sm:h-[60vh] text-center px-4">
+            <div className="flex flex-col items-center justify-center h-[60vh] text-center">
               <div className="relative mb-6">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center bg-primary/10">
-                  <span className="text-4xl sm:text-5xl" role="img" aria-label="watermelon">🍉</span>
+                <div className="w-24 h-24 rounded-3xl flex items-center justify-center" style={{ background: 'rgba(255, 107, 107, 0.15)' }}>
+                  <span className="text-5xl" role="img" aria-label="watermelon">🍉</span>
                 </div>
-                <Sparkles className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 animate-pulse text-accent" />
+                <Sparkles className="absolute -top-2 -right-2 w-6 h-6 animate-pulse" style={{ color: 'var(--melon-green)' }} />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold mb-3 text-foreground">
-                Welcome to OptiMelon
-              </h2>
-              <p className="max-w-md mb-6 sm:mb-8 leading-relaxed text-sm sm:text-base text-muted-foreground">
-                A clean, high-signal LLM wrapper that adapts to your needs. 
-                Coding assistance, productivity help, or study guidance - all in one place.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                {[
-                  { text: "Help me code", icon: "💻" },
-                  { text: "Explain a concept", icon: "📚" },
-                  { text: "Draft an email", icon: "✉️" },
-                ].map((suggestion) => (
-                  <button
-                    key={suggestion.text}
-                    onClick={() => setInput(suggestion.text)}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border transition-all duration-200 text-xs sm:text-sm hover:scale-105 bg-secondary/30 border-border text-foreground hover:bg-secondary/50"
-                  >
-                    <span>{suggestion.icon}</span>
-                    <span>{suggestion.text}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
               <h2 className="text-2xl font-bold mb-3" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
                 Welcome to OptiMelon
               </h2>
@@ -418,16 +388,16 @@ export function ChatWindow() {
               ))}
               {isLoading && messages[messages.length - 1]?.role === "user" && (
                 <div className="flex gap-3" style={{ animation: 'messageEnter 0.3s ease-out' }}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-accent/10 text-accent">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(152, 216, 200, 0.15)', color: 'var(--melon-green)' }}>
                     <Loader2 className="h-4 w-4 animate-spin" />
                   </div>
-                  <div className="border rounded-2xl px-4 py-3 shadow-sm bg-card border-border">
+                  <div className="border rounded-2xl px-4 py-3 shadow-sm" style={{ background: 'rgba(26, 26, 31, 0.4)', borderColor: 'rgba(255, 255, 255, 0.05)' }}>
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Thinking</span>
+                      <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Thinking</span>
                       <span className="flex gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "300ms" }} />
                       </span>
                     </div>
                   </div>
@@ -441,17 +411,17 @@ export function ChatWindow() {
 
       {/* Error display */}
       {error && (
-        <div className="flex-shrink-0 border-t px-3 sm:px-4 py-3 bg-destructive/10 border-destructive/20" style={{ animation: 'messageEnter 0.3s ease-out' }}>
+        <div className="flex-shrink-0 border-t px-4 py-3" style={{ background: 'rgba(255, 107, 107, 0.1)', borderColor: 'rgba(255, 107, 107, 0.2)', animation: 'messageEnter 0.3s ease-out' }}>
           <div className="max-w-4xl mx-auto">
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm" style={{ color: 'var(--melon-red)' }}>{error}</p>
           </div>
         </div>
       )}
 
       {/* Input area */}
-      <footer className="flex-shrink-0 border-t px-3 sm:px-4 py-2.5 sm:py-3 sticky bottom-0 glass-card border-border">
+      <footer className="flex-shrink-0 border-t px-4 py-3 sticky bottom-0" style={{ borderColor: 'rgba(255, 255, 255, 0.08)', background: 'rgba(26, 26, 31, 0.6)', backdropFilter: 'blur(24px) saturate(180%)' }}>
         <div className="max-w-4xl mx-auto">
-          <div className="flex gap-2 sm:gap-2.5 items-end">
+          <div className="flex gap-2.5 items-end">
             <div className="flex-1 relative">
               <Textarea
                 ref={textareaRef}
@@ -459,7 +429,7 @@ export function ChatWindow() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Message OptiMelon..."
-                className="min-h-[48px] sm:min-h-[52px] max-h-[200px] resize-none pr-3 py-2.5 sm:py-3 rounded-xl transition-all glass-input text-sm"
+                className="min-h-[52px] max-h-[200px] resize-none pr-3 py-3 rounded-xl transition-all glass-input text-sm"
                 disabled={isLoading}
               />
             </div>
@@ -467,8 +437,13 @@ export function ChatWindow() {
               <Button
                 onClick={handleStop}
                 size="icon"
-                className="h-[48px] w-[48px] sm:h-[52px] sm:w-[52px] rounded-xl transition-all duration-200 border flex-shrink-0 bg-primary/15 border-primary/40 text-primary hover:bg-primary/20"
-                style={{ animation: 'pulseGlow 2s ease-in-out infinite' }}
+                className="h-[52px] w-[52px] rounded-xl transition-all duration-200 border flex-shrink-0"
+                style={{
+                  background: 'rgba(255, 107, 107, 0.15)',
+                  borderColor: 'rgba(255, 107, 107, 0.4)',
+                  color: 'var(--melon-red)',
+                  animation: 'pulseGlow 2s ease-in-out infinite'
+                }}
               >
                 <Square className="h-4 w-4 fill-current" />
               </Button>
@@ -477,9 +452,10 @@ export function ChatWindow() {
                 onClick={sendMessage}
                 disabled={!input.trim()}
                 size="icon"
-                className="h-[48px] w-[48px] sm:h-[52px] sm:w-[52px] rounded-xl melon-gradient shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                className="h-[52px] w-[52px] rounded-xl melon-gradient shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                style={{ boxShadow: '0 3px 12px rgba(255, 107, 107, 0.25)' }}
               >
-                <Send className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                <Send className="h-4.5 w-4.5" />
               </Button>
             )}
           </div>
