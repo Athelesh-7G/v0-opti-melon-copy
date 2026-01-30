@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronDown, Info, Cpu, Sparkles, Code, FileText, Brain } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Info, Cpu, Sparkles, Code, FileText, Brain } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -40,6 +40,11 @@ export function ChatModelSelector({
   const [specsOpen, setSpecsOpen] = useState(false)
   const [selectedModelForSpecs, setSelectedModelForSpecs] =
     useState<ModelInfo | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const currentModel = getModelById(selectedModel)
 
@@ -66,11 +71,9 @@ export function ChatModelSelector({
             }}
           >
             <Cpu className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "var(--melon-coral)" }} />
-            <SelectValue placeholder="Select model">
-              <span className="truncate max-w-[120px] sm:max-w-[180px]">
-                {currentModel?.name || selectedModel.split("/").pop()}
-              </span>
-            </SelectValue>
+            <span className="truncate max-w-[120px] sm:max-w-[180px]">
+              {mounted ? (currentModel?.name || "Select model") : "Select model"}
+            </span>
           </SelectTrigger>
         <SelectContent
           className="max-h-[400px] overflow-y-auto glass-card"
