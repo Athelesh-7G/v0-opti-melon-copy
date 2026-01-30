@@ -380,9 +380,7 @@ export function ChatWindow() {
               >
                 <PanelLeft className="h-5 w-5" />
               </button>
-              <div className="w-8 h-8 rounded-lg melon-gradient flex items-center justify-center" style={{ boxShadow: '0 2px 8px rgba(255, 107, 107, 0.2)' }}>
-                <span className="text-sm" role="img" aria-label="watermelon">🍉</span>
-              </div>
+              <span className="text-xl" role="img" aria-label="watermelon">🍉</span>
               <h1 className="text-base font-semibold tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
                 OptiMelon
               </h1>

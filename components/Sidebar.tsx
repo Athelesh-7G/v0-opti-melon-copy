@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Plus, Home, Settings, Trash2, PanelLeftClose, PanelLeft } from "lucide-react"
+import { Plus, Home, Settings, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow } from "date-fns"
 
@@ -88,17 +88,10 @@ export function Sidebar({
           backdropFilter: 'blur(20px)' 
         }}
       >
-        {/* Sidebar Header with toggle */}
-        <div className="flex items-center justify-between p-3 border-b" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
+        {/* Sidebar Header */}
+        <div className="flex items-center gap-2 p-3 border-b" style={{ borderColor: "rgba(255, 255, 255, 0.06)" }}>
+          <span className="text-lg" role="img" aria-label="watermelon">🍉</span>
           <span className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>Chats</span>
-          <button
-            onClick={onToggle}
-            className="p-1.5 rounded-lg transition-all duration-200 hover:bg-white/10"
-            style={{ color: 'rgba(255, 255, 255, 0.6)' }}
-            aria-label="Close sidebar"
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </button>
         </div>
         
         {/* New Chat Button */}
