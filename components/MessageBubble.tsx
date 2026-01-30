@@ -1,13 +1,15 @@
 "use client"
 
 import React from "react"
-import { useState, useCallback, useMemo } from "react"
-import { Check, Copy, User } from "lucide-react"
-import { extractCodeBlocks, parseInlineMarkdown, parseBlockMarkdown } from "@/lib/markdown"
+import { useState, useCallback, useMemo, useId } from "react"
+import { Check, Copy, User, Pencil } from "lucide-react"
+import { extractCodeBlocks, parseBlockMarkdown } from "@/lib/markdown"
 
 interface MessageBubbleProps {
   role: "user" | "assistant"
   content: string
+  onCopy?: (content: string) => void
+  onEdit?: (content: string) => void
 }
 
 function CodeBlock({ language, code }: { language: string; code: string }) {
@@ -44,9 +46,10 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   )
 }
 
-// Parse inline markdown with soft styling
+// Parse inline markdown with soft styling - clean rendering without artifacts
+// Safe for streaming: handles incomplete markdown gracefully
 function parseSoftInlineMarkdown(text: string): string {
-  // Escape HTML first
+  // Escape HTML first to prevent XSS
   const escapeHtml = (str: string): string => {
     const entities: Record<string, string> = {
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -56,39 +59,48 @@ function parseSoftInlineMarkdown(text: string): string {
   
   let result = escapeHtml(text)
   
-  // Bold - subtle weight, no loud color
-  result = result.replace(/\*\*(.*?)\*\*/g, '<strong class="font-medium" style="color: rgba(255, 255, 255, 0.92);">$1</strong>')
+  // Bold - only match complete ** pairs (non-greedy, requires closing **)
+  result = result.replace(/\*\*(.+?)\*\*/g, '<strong class="font-medium" style="color: rgba(255, 255, 255, 0.92);">$1</strong>')
   
-  // Italic
-  result = result.replace(/\*(.*?)\*/g, "<em>$1</em>")
+  // Italic - only match complete single * pairs (not part of **)
+  result = result.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, "<em>$1</em>")
   
-  // Inline code
-  result = result.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+  // Inline code - only match complete backtick pairs
+  result = result.replace(/`([^`]+?)`/g, '<code class="inline-code">$1</code>')
   
-  // Links
+  // Links - only match complete [text](url) patterns
   result = result.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline hover:text-primary/80 transition-colors">$1</a>'
   )
   
+  // Clean up any stray markdown characters that appear at line boundaries during streaming
+  // This removes isolated ** or * that appear at the end (incomplete markdown)
+  result = result.replace(/\*{1,2}$/, '')
+  
   return result
 }
 
-function renderTextContent(text: string, keyPrefix: string) {
+function renderTextContent(text: string, keyPrefix: string): React.ReactNode[] {
   const blocks = parseBlockMarkdown(text)
   
   return blocks.map((block, i) => {
+    // Generate stable keys using index - no randomness
+    const stableKey = `${keyPrefix}-${block.type}-${i}`
+    
     if (block.type === 'heading') {
       // Soften headers - minimal visual distinction, natural text hierarchy
-      const headingStyles = {
+      // Render as styled text, not raw markdown (no "###" visible)
+      const headingStyles: Record<number, string> = {
         1: "text-base font-semibold mt-3 mb-1.5",
         2: "text-base font-medium mt-2 mb-1",
         3: "text-base font-medium mt-2 mb-1"
       }
+      const level = block.level ?? 1
       return (
         <p 
-          key={`${keyPrefix}-h${block.level}-${i}`} 
-          className={headingStyles[block.level as 1 | 2 | 3]}
+          key={stableKey} 
+          className={headingStyles[level] ?? headingStyles[1]}
           style={{ color: 'rgba(255, 255, 255, 0.9)' }}
         >
           <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content) }} />
@@ -97,11 +109,12 @@ function renderTextContent(text: string, keyPrefix: string) {
     }
     
     if (block.type === 'ul') {
-      const items = block.content.split('\n')
+      // Clean unordered list - no raw "-" or "*" visible
+      const items = block.content.split('\n').filter(item => item.trim())
       return (
-        <ul key={`${keyPrefix}-ul-${i}`} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'disc', color: 'rgba(255, 255, 255, 0.8)' }}>
+        <ul key={stableKey} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'disc', color: 'rgba(255, 255, 255, 0.8)' }}>
           {items.map((item, j) => (
-            <li key={j} className="leading-relaxed text-sm">
+            <li key={`${stableKey}-item-${j}`} className="leading-relaxed text-sm">
               <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item) }} />
             </li>
           ))}
@@ -110,11 +123,12 @@ function renderTextContent(text: string, keyPrefix: string) {
     }
     
     if (block.type === 'ol') {
-      const items = block.content.split('\n')
+      // Clean ordered list - no raw "1." visible
+      const items = block.content.split('\n').filter(item => item.trim())
       return (
-        <ol key={`${keyPrefix}-ol-${i}`} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'decimal', color: 'rgba(255, 255, 255, 0.8)' }}>
+        <ol key={stableKey} className="my-2 space-y-1 pl-5" style={{ listStyleType: 'decimal', color: 'rgba(255, 255, 255, 0.8)' }}>
           {items.map((item, j) => (
-            <li key={j} className="leading-relaxed text-sm">
+            <li key={`${stableKey}-item-${j}`} className="leading-relaxed text-sm">
               <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(item) }} />
             </li>
           ))}
@@ -122,20 +136,20 @@ function renderTextContent(text: string, keyPrefix: string) {
       )
     }
     
-    // Regular paragraph
+    // Regular paragraph - clean text without markdown artifacts
     return (
-      <p key={`${keyPrefix}-p-${i}`} className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+      <p key={stableKey} className="mb-3 last:mb-0 leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
         <span dangerouslySetInnerHTML={{ __html: parseSoftInlineMarkdown(block.content) }} />
       </p>
     )
   })
 }
 
-function renderContent(content: string) {
+function renderContent(content: string, uniqueId: string): React.ReactNode[] {
   const codeBlocks = extractCodeBlocks(content)
 
   if (codeBlocks.length === 0) {
-    return renderTextContent(content, 'content')
+    return renderTextContent(content, `${uniqueId}-content`)
   }
 
   const elements: React.ReactNode[] = []
@@ -145,30 +159,44 @@ function renderContent(content: string) {
     if (block.startIndex > lastIndex) {
       const textBefore = content.slice(lastIndex, block.startIndex).trim()
       if (textBefore) {
-        elements.push(...renderTextContent(textBefore, `before-${index}`))
+        elements.push(...renderTextContent(textBefore, `${uniqueId}-before-${index}`))
       }
     }
 
-    elements.push(<CodeBlock key={`code-${index}`} language={block.language} code={block.code} />)
+    elements.push(<CodeBlock key={`${uniqueId}-code-${index}`} language={block.language} code={block.code} />)
     lastIndex = block.endIndex
   })
 
   if (lastIndex < content.length) {
     const textAfter = content.slice(lastIndex).trim()
     if (textAfter) {
-      elements.push(...renderTextContent(textAfter, 'after'))
+      elements.push(...renderTextContent(textAfter, `${uniqueId}-after`))
     }
   }
 
   return elements
 }
 
-export function MessageBubble({ role, content }: MessageBubbleProps) {
-  const renderedContent = useMemo(() => renderContent(content), [content])
+export function MessageBubble({ role, content, onCopy, onEdit }: MessageBubbleProps) {
+  // Use stable ID for hydration safety
+  const id = useId()
+  const renderedContent = useMemo(() => renderContent(content, id), [content, id])
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(content)
+    setCopied(true)
+    onCopy?.(content)
+    setTimeout(() => setCopied(false), 2000)
+  }, [content, onCopy])
+
+  const handleEdit = useCallback(() => {
+    onEdit?.(content)
+  }, [content, onEdit])
 
   return (
     <div
-      className={`flex gap-3 ${
+      className={`group flex gap-3 ${
         role === "user" ? "flex-row-reverse" : ""
       }`}
       style={{ animation: 'messageEnter 0.3s ease-out' }}
@@ -187,24 +215,76 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
           <span className="text-sm" role="img" aria-label="assistant">🍉</span>
         )}
       </div>
-      <div
-        className={`flex-1 max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm ${
-          role === "user"
-            ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground ml-auto border-l-2"
-            : "border"
-        }`}
-        style={
-          role === "user" 
-            ? { borderLeftColor: 'var(--melon-red)' }
-            : { 
-                background: 'rgba(26, 26, 31, 0.4)', 
-                borderColor: 'rgba(255, 255, 255, 0.05)' 
-              }
-        }
-      >
-        <div className={`max-w-none ${role === "user" ? "" : ""}`}>
-          {renderedContent}
+      <div className={`flex-1 max-w-[85%] ${role === "user" ? "ml-auto" : ""}`}>
+        <div
+          className={`rounded-2xl px-5 py-3.5 shadow-sm ${
+            role === "user"
+              ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground border-l-2"
+              : "border"
+          }`}
+          style={
+            role === "user" 
+              ? { borderLeftColor: 'var(--melon-red)' }
+              : { 
+                  background: 'rgba(26, 26, 31, 0.4)', 
+                  borderColor: 'rgba(255, 255, 255, 0.05)' 
+                }
+          }
+        >
+          <div className="max-w-none">
+            {renderedContent}
+          </div>
         </div>
+        
+        {/* Action buttons - ALWAYS visible for user messages */}
+        {role === "user" && (
+          <div className="flex justify-end gap-1.5 mt-2">
+            <button
+              onClick={handleCopy}
+              className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:bg-white/10"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: copied ? 'var(--melon-green)' : 'rgba(255, 255, 255, 0.5)'
+              }}
+              aria-label={copied ? "Copied" : "Copy message"}
+              title="Copy message"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+            {onEdit && (
+              <button
+                onClick={handleEdit}
+                className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:bg-white/10"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'rgba(255, 255, 255, 0.5)'
+                }}
+                aria-label="Edit message"
+                title="Edit message"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+        
+        {/* Copy button - ALWAYS visible for assistant messages */}
+        {role === "assistant" && (
+          <div className="flex justify-start gap-1.5 mt-2">
+            <button
+              onClick={handleCopy}
+              className="p-1.5 rounded-md transition-all duration-200 hover:scale-105 hover:bg-white/10"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.05)',
+                color: copied ? 'var(--melon-green)' : 'rgba(255, 255, 255, 0.5)'
+              }}
+              aria-label={copied ? "Copied" : "Copy response"}
+              title="Copy response"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

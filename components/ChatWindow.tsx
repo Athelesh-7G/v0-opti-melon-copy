@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Send, Loader2, Sparkles, Square } from "lucide-react"
+import { Send, Loader2, Sparkles, Square, PanelLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { MessageBubble } from "./MessageBubble"
@@ -46,6 +46,8 @@ export function ChatWindow() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
 
   const [provider, setProvider] = useState<Provider>("bytez")
   const [model, setModel] = useState("Qwen/Qwen3-8B")
@@ -56,6 +58,22 @@ export function ChatWindow() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  // Handle responsive detection after mount to avoid hydration issues
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      // Close sidebar on mobile by default
+      if (mobile && sidebarOpen) {
+        setSidebarOpen(false)
+      }
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const storedMessages = loadMessages()
@@ -297,6 +315,13 @@ export function ChatWindow() {
     }
   }, [currentChatId, handleNewChat])
 
+  // Handle editing a user message - puts content back in input for re-submission
+  const handleEditMessage = useCallback((messageContent: string) => {
+    setInput(messageContent)
+    // Focus the textarea
+    textareaRef.current?.focus()
+  }, [])
+
   // Initialize with a new chat
   useEffect(() => {
     if (!currentChatId && chats.length === 0) {
@@ -314,28 +339,42 @@ export function ChatWindow() {
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
         onOpenSettings={() => setSettingsOpen(!settingsOpen)}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
-      {/* Main Chat Panel */}
-      <div className="flex flex-col flex-1 min-w-0">
+      {/* Main Chat Panel - adjusts margin based on sidebar state (desktop only) */}
+      <div 
+        className="flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out"
+        style={{ marginLeft: !isMobile && sidebarOpen ? '260px' : '0' }}
+      >
         {/* Header with glass effect */}
-        <header className="flex-shrink-0 border-b px-4 py-4 glass-card relative z-10" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl melon-gradient flex items-center justify-center" style={{ boxShadow: '0 2px 8px rgba(255, 107, 107, 0.2)' }}>
-              <span className="text-base" role="img" aria-label="watermelon">🍉</span>
+        <header className="flex-shrink-0 border-b px-4 py-3 glass-card relative z-10" style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Claude-style sidebar toggle */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-lg transition-all duration-200 hover:bg-white/5"
+                style={{ color: 'rgba(255, 255, 255, 0.6)' }}
+                aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+              >
+                <PanelLeft className="h-5 w-5" />
+              </button>
+              <div className="w-8 h-8 rounded-lg melon-gradient flex items-center justify-center" style={{ boxShadow: '0 2px 8px rgba(255, 107, 107, 0.2)' }}>
+                <span className="text-sm" role="img" aria-label="watermelon">🍉</span>
+              </div>
+              <h1 className="text-base font-semibold tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
+                OptiMelon
+              </h1>
             </div>
-            <h1 className="text-lg font-semibold tracking-tight" style={{ color: 'rgba(255, 255, 255, 0.95)' }}>
-              OptiMelon
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
-              <span className="text-xs font-mono truncate max-w-[140px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{model.split("/").pop()}</span>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: 'rgba(255, 255, 255, 0.02)' }}>
+                <span className="text-xs font-mono truncate max-w-[140px]" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{model.split("/").pop()}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* Messages area */}
       <main className="flex-1 overflow-y-auto scrollbar-melon relative">
@@ -359,7 +398,7 @@ export function ChatWindow() {
                 {[
                   { text: "Help me code", icon: "💻" },
                   { text: "Explain a concept", icon: "📚" },
-                  { text: "Draft an email", icon: "���️" },
+                  { text: "Draft an email", icon: "✉️" },
                 ].map((suggestion) => (
                   <button
                     key={suggestion.text}
@@ -384,6 +423,7 @@ export function ChatWindow() {
                   key={message.id}
                   role={message.role}
                   content={message.content}
+                  onEdit={message.role === "user" ? handleEditMessage : undefined}
                 />
               ))}
               {isLoading && messages[messages.length - 1]?.role === "user" && (
@@ -393,13 +433,16 @@ export function ChatWindow() {
                   </div>
                   <div className="border rounded-2xl px-4 py-3 shadow-sm" style={{ background: 'rgba(26, 26, 31, 0.4)', borderColor: 'rgba(255, 255, 255, 0.05)' }}>
                     <div className="flex items-center gap-2">
-                      <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Thinking</span>
-                      <span className="flex gap-1">
+                      <span style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Generating response</span>
+                      <span className="flex gap-1" aria-hidden="true">
                         <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "0ms" }} />
                         <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "150ms" }} />
                         <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: 'var(--melon-coral)', animationDelay: "300ms" }} />
                       </span>
                     </div>
+                    <p className="text-xs mt-1 hidden sm:block" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                      Press <kbd className="px-1 py-0.5 rounded text-[10px] border" style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }}>Esc</kbd> to stop
+                    </p>
                   </div>
                 </div>
               )}
@@ -437,13 +480,15 @@ export function ChatWindow() {
               <Button
                 onClick={handleStop}
                 size="icon"
-                className="h-[52px] w-[52px] rounded-xl transition-all duration-200 border flex-shrink-0"
+                className="h-[52px] w-[52px] rounded-xl transition-all duration-200 border flex-shrink-0 group"
                 style={{
                   background: 'rgba(255, 107, 107, 0.15)',
                   borderColor: 'rgba(255, 107, 107, 0.4)',
                   color: 'var(--melon-red)',
                   animation: 'pulseGlow 2s ease-in-out infinite'
                 }}
+                title="Stop generation (Esc)"
+                aria-label="Stop generation"
               >
                 <Square className="h-4 w-4 fill-current" />
               </Button>

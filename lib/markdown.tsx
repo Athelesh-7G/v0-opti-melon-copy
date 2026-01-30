@@ -55,6 +55,7 @@ export function parseInlineMarkdown(text: string): string {
 }
 
 // Parse block-level markdown (headers, lists)
+// Safe for streaming: gracefully handles incomplete markdown
 export function parseBlockMarkdown(text: string): { type: string; content: string; level?: number }[] {
   const lines = text.split('\n')
   const blocks: { type: string; content: string; level?: number }[] = []
@@ -73,48 +74,58 @@ export function parseBlockMarkdown(text: string): { type: string; content: strin
   }
 
   for (const line of lines) {
-    // Headers (h1, h2, h3)
+    // Skip empty lines but flush any pending list
+    if (!line.trim()) {
+      flushList()
+      continue
+    }
+    
+    // Headers (h1, h2, h3) - must have space after # and content
     const headerMatch = line.match(/^(#{1,3})\s+(.+)$/)
     if (headerMatch) {
       flushList()
       blocks.push({
         type: 'heading',
         level: headerMatch[1].length,
-        content: headerMatch[2]
+        content: headerMatch[2].trim()
       })
       continue
     }
+    
+    // Handle incomplete header during streaming (just # without content yet)
+    if (/^#{1,3}\s*$/.test(line)) {
+      // Skip incomplete headers - they'll complete on next stream chunk
+      continue
+    }
 
-    // Unordered lists
+    // Unordered lists - dash or asterisk followed by space and content
     const ulMatch = line.match(/^[\-\*]\s+(.+)$/)
     if (ulMatch) {
       if (listType !== 'ul') {
         flushList()
         listType = 'ul'
       }
-      currentList.push(ulMatch[1])
+      currentList.push(ulMatch[1].trim())
       continue
     }
 
-    // Ordered lists
+    // Ordered lists - number followed by dot, space, and content
     const olMatch = line.match(/^\d+\.\s+(.+)$/)
     if (olMatch) {
       if (listType !== 'ol') {
         flushList()
         listType = 'ol'
       }
-      currentList.push(olMatch[1])
+      currentList.push(olMatch[1].trim())
       continue
     }
 
-    // Regular paragraph
-    if (line.trim()) {
-      flushList()
-      blocks.push({
-        type: 'paragraph',
-        content: line
-      })
-    }
+    // Regular paragraph - any other non-empty line
+    flushList()
+    blocks.push({
+      type: 'paragraph',
+      content: line.trim()
+    })
   }
 
   flushList()
