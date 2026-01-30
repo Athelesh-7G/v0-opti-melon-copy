@@ -55,22 +55,23 @@ export function ChatModelSelector({
 
   return (
     <>
-      <Select value={selectedModel} onValueChange={onModelChange}>
-        <SelectTrigger
-          className="h-8 px-2.5 gap-1.5 text-xs font-medium rounded-lg border transition-all duration-200 w-auto min-w-0"
-          style={{
-            background: "rgba(26, 26, 31, 0.6)",
-            borderColor: "rgba(255, 255, 255, 0.1)",
-            color: "rgba(255, 255, 255, 0.85)",
-          }}
-        >
-          <Cpu className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "var(--melon-coral)" }} />
-          <SelectValue placeholder="Select model">
-            <span className="truncate max-w-[120px] sm:max-w-[180px]">
-              {currentModel?.name || selectedModel.split("/").pop()}
-            </span>
-          </SelectValue>
-        </SelectTrigger>
+      <div className="flex items-center gap-1">
+        <Select value={selectedModel} onValueChange={onModelChange}>
+          <SelectTrigger
+            className="h-8 px-2.5 gap-1.5 text-xs font-medium rounded-lg border transition-all duration-200 w-auto min-w-0"
+            style={{
+              background: "rgba(26, 26, 31, 0.6)",
+              borderColor: "rgba(255, 255, 255, 0.1)",
+              color: "rgba(255, 255, 255, 0.85)",
+            }}
+          >
+            <Cpu className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "var(--melon-coral)" }} />
+            <SelectValue placeholder="Select model">
+              <span className="truncate max-w-[120px] sm:max-w-[180px]">
+                {currentModel?.name || selectedModel.split("/").pop()}
+              </span>
+            </SelectValue>
+          </SelectTrigger>
         <SelectContent
           className="max-h-[400px] overflow-y-auto glass-card"
           style={{
@@ -107,21 +108,49 @@ export function ChatModelSelector({
                     </div>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="h-6 w-6 flex-shrink-0 flex items-center justify-center rounded hover:bg-white/10 transition-colors cursor-pointer"
                   onClick={(e) => handleOpenSpecs(e, model.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleOpenSpecs(e as unknown as React.MouseEvent, model.id)
+                    }
+                  }}
                   style={{ color: "var(--melon-green)" }}
                   title="View specs"
+                  aria-label={`View specs for ${model.name}`}
                 >
                   <Info className="h-3.5 w-3.5" />
-                </Button>
+                </div>
               </div>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+        
+        {/* Specs button for current model */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 rounded-lg border transition-all duration-200 hover:border-[var(--melon-green)]"
+          style={{
+            background: "rgba(26, 26, 31, 0.6)",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+            color: "var(--melon-green)",
+          }}
+          onClick={(e) => {
+            if (currentModel) {
+              handleOpenSpecs(e, currentModel.id)
+            }
+          }}
+          title="View model specs"
+          aria-label="View model specs"
+        >
+          <Info className="h-4 w-4" />
+        </Button>
+      </div>
 
       <ModelSpecsDialog
         model={selectedModelForSpecs}
