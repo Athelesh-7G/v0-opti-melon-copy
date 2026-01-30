@@ -4,12 +4,12 @@ import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-import { Geist_Mono, Bebas_Neue as V0_Font_Bebas_Neue, Geist_Mono as V0_Font_Geist_Mono, Crimson_Text as V0_Font_Crimson_Text } from 'next/font/google'
+import { Geist_Mono, Poppins as V0_Font_Poppins, Geist_Mono as V0_Font_Geist_Mono, Vollkorn as V0_Font_Vollkorn } from 'next/font/google'
 
 // Initialize fonts
-const _bebasNeue = V0_Font_Bebas_Neue({ subsets: ['latin'], weight: ["400"] })
+const _poppins = V0_Font_Poppins({ subsets: ['latin'], weight: ["100","200","300","400","500","600","700","800","900"] })
 const _geistMono = V0_Font_Geist_Mono({ subsets: ['latin'], weight: ["100","200","300","400","500","600","700","800","900"] })
-const _crimsonText = V0_Font_Crimson_Text({ subsets: ['latin'], weight: ["400","600","700"] })
+const _vollkorn = V0_Font_Vollkorn({ subsets: ['latin'], weight: ["400","500","600","700","800","900"] })
 
 export const metadata: Metadata = {
   title: 'OptiMelon - High-Signal LLM Wrapper',
