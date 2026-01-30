@@ -556,19 +556,17 @@ export function ChatWindow() {
             )}
           </div>
           
-          {/* Bottom toolbar with model selector (left) and upload (right) */}
-          <div className="flex items-center justify-between mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+          {/* Bottom toolbar with file upload + model selectors (all left-aligned) */}
+          <div className="flex items-center gap-1 mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }}>
+            <FileUpload
+              files={[]}
+              onFilesChange={(newFiles) => setUploadedFiles((prev) => [...prev, ...newFiles])}
+              disabled={isLoading}
+            />
             <ChatModelSelector
               selectedModel={model}
               onModelChange={setModel}
             />
-            <div className="flex items-center gap-2">
-              <FileUpload
-                files={[]}
-                onFilesChange={(newFiles) => setUploadedFiles((prev) => [...prev, ...newFiles])}
-                disabled={isLoading}
-              />
-            </div>
           </div>
         </div>
       </footer>
