@@ -31,9 +31,9 @@ export function ModelSpecsDialog({
           <div className="flex items-center gap-3 mb-2">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(248, 113, 113, 0.15)" }}
+              style={{ background: "rgba(239, 68, 68, 0.15)" }}
             >
-              <Cpu className="h-5 w-5" style={{ color: "#F87171" }} />
+              <Cpu className="h-5 w-5" style={{ color: "#EF4444" }} />
             </div>
             <div>
               <DialogTitle className="text-lg">{model.name}</DialogTitle>
@@ -109,9 +109,9 @@ export function ModelSpecsDialog({
                 variant="outline"
                 className="text-xs font-normal"
                 style={{
-                  background: "rgba(248, 113, 113, 0.1)",
-                  borderColor: "rgba(248, 113, 113, 0.3)",
-                  color: "#F87171",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  borderColor: "rgba(239, 68, 68, 0.3)",
+                  color: "#EF4444",
                 }}
               >
                 {tag}

@@ -498,7 +498,7 @@ export function ChatWindow() {
 
       {/* Error display */}
       {error && (
-        <div className="flex-shrink-0 border-t px-4 py-3" style={{ background: 'rgba(248, 113, 113, 0.1)', borderColor: 'rgba(248, 113, 113, 0.2)', animation: 'messageEnter 0.3s ease-out' }}>
+        <div className="flex-shrink-0 border-t px-4 py-3" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)', animation: 'messageEnter 0.3s ease-out' }}>
           <div className="max-w-4xl mx-auto">
             <p className="text-sm" style={{ color: 'var(--melon-red)' }}>{error}</p>
           </div>
@@ -537,8 +537,8 @@ export function ChatWindow() {
                 size="icon"
                 className="h-[52px] w-[52px] rounded-xl transition-all duration-200 border flex-shrink-0 group"
                 style={{
-                  background: 'rgba(233, 30, 99, 0.15)',
-                  borderColor: 'rgba(233, 30, 99, 0.4)',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  borderColor: 'rgba(239, 68, 68, 0.4)',
                   color: 'var(--melon-red)',
                   animation: 'pulseGlow 2s ease-in-out infinite'
                 }}
@@ -553,7 +553,7 @@ export function ChatWindow() {
                 disabled={!input.trim() && uploadedFiles.length === 0}
                 size="icon"
                 className="h-[52px] w-[52px] rounded-xl melon-gradient shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 text-white"
-                style={{ boxShadow: '0 3px 12px rgba(233, 30, 99, 0.25)' }}
+                style={{ boxShadow: '0 3px 12px rgba(239, 68, 68, 0.25)' }}
               >
                 <Send className="h-4.5 w-4.5" />
               </Button>
