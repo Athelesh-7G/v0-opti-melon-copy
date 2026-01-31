@@ -34,15 +34,15 @@ export function MelonLogo({ className, size = "md" }: MelonLogoProps) {
         d="M20 90 Q20 25 85 15 L85 25 Q30 30 30 90 Z"
         fill="#86efac"
       />
-      {/* Red/coral flesh */}
+      {/* Deep watermelon red flesh */}
       <path
         d="M30 90 Q30 35 80 25 L80 35 Q40 42 40 90 Z"
-        fill="#ff6b6b"
+        fill="#E53935"
       />
-      {/* Inner pink flesh */}
+      {/* Inner lighter red flesh */}
       <path
         d="M40 90 Q40 48 75 38 L75 48 Q50 55 50 90 Z"
-        fill="#ffa5a5"
+        fill="#EF5350"
       />
       {/* Seeds */}
       <ellipse cx="45" cy="70" rx="3" ry="5" fill="#1a1a1f" transform="rotate(-20 45 70)" />
