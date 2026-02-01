@@ -1,30 +1,41 @@
-# OptiMelon LLM Wrapper
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+# OptiMelon: Unified Intelligence System
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/athelesh-bs-projects/v0-opti-melon-llm-wrapper)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/nybrCcc7mBN)
+**OptiMelon** is a model-first AI platform that gives direct access to powerful, task-specialized open-source language models through a clean, focused, and premium interface.
 
-## Overview
+![OptiMelon Banner](https://v0-optimelon.vercel.app/og-image.png)
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+> **Power should be hidden. Capability should be obvious.**
 
-## Deployment
+## 🍈 Why OptiMelon?
 
-Your project is live at:
+Most AI tools act as thin wrappers around a single API or raw playgrounds with too much complexity. OptiMelon takes a different path:
+- **Unified System:** Treated as a cohesive workspace, not just a router.
+- **Specialized Intelligence:** Access 10+ state-of-the-art open-source models (DeepSeek, Llama 3, etc.) curated for specific tasks.
+- **Calm Experience:** A glassmorphism-inspired UI designed for long, focused work sessions.
 
-**[https://vercel.com/athelesh-bs-projects/v0-opti-melon-llm-wrapper](https://vercel.com/athelesh-bs-projects/v0-opti-melon-llm-wrapper)**
+## 🚀 Core Capabilities
 
-## Build your app
+| Intent | Optimized For |
+| :--- | :--- |
+| **Coding** | Debugging, refactoring, clean code generation |
+| **Reasoning** | Logic puzzles, math, structured problem solving |
+| **Creative** | Storytelling, drafting, expressive writing |
+| **Deep Context** | Document analysis, long conversations |
 
-Continue building your app on:
+## ✨ Features
 
-**[https://v0.app/chat/nybrCcc7mBN](https://v0.app/chat/nybrCcc7mBN)**
+- **Model-First Workflow:** Select tools based on *what you want to do*, not which provider hosts them.
+- **Seamless Switching:** Change models mid-conversation without breaking your flow.
+- **High-Signal Output:** Minimal visual noise, optimized for readability and clarity.
+- **Premium UI:** A distraction-free "melon" visual identity with modern glassmorphism aesthetics.
 
-## How It Works
+## 🛠️ Built For
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+- **Developers** needing specialized coding assistance.
+- **Writers** looking for creative flow.
+- **Researchers** requiring deep context analysis.
+- **You**, if you value clarity over clutter.
+
+---
+*Created by Athelesh Balachandran*
