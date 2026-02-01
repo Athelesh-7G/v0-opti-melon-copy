@@ -3,7 +3,7 @@
 
 **OptiMelon** is a model-first AI platform that gives direct access to powerful, task-specialized open-source language models through a clean, focused, and premium interface.
 
-(https://v0-optimelon.vercel.app/og-image.png)
+![OptiMelon Banner](https://v0-optimelon.vercel.app/og-image.png)
 
 > **Power should be hidden. Capability should be obvious.**
 
