@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Plus, Settings, Trash2, Linkedin, Instagram, Mail, PanelLeft, ChevronRight } from "lucide-react"
+import { Plus, Settings, Trash2, Linkedin, Instagram, Mail, PanelLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatDistanceToNow } from "date-fns"
 
@@ -33,6 +33,7 @@ export function Sidebar({
   onToggle,
 }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Handle responsive detection after mount to avoid hydration issues
   useEffect(() => {
@@ -75,17 +76,6 @@ export function Sidebar({
         />
       )}
 
-      {/* Peek strip - visible when sidebar is closed (desktop only) */}
-      {!isMobile && !isOpen && (
-        <button
-          onClick={onToggle}
-          className="fixed left-0 top-0 h-screen w-10 z-40 flex items-center justify-center bg-sidebar/50 backdrop-blur-md border-r border-sidebar-border hover:bg-sidebar/80 transition-colors group"
-          aria-label="Open sidebar"
-        >
-          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-sidebar-foreground transition-colors" />
-        </button>
-      )}
-
       <aside
         className={`
           fixed inset-y-0 left-0 z-40
@@ -125,6 +115,17 @@ export function Sidebar({
           </Button>
         </div>
 
+        {/* Search Chats */}
+        <div className="px-3 pb-3">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search chats"
+            className="w-full rounded-lg border border-sidebar-border bg-sidebar px-3 py-2 text-xs text-sidebar-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </div>
+
       {/* Chat History */}
       <nav className="flex-1 overflow-y-auto scrollbar-melon p-1.5">
         <div className="space-y-0.5">
@@ -133,7 +134,12 @@ export function Sidebar({
               <p className="text-xs">No history</p>
             </div>
           ) : (
-            chats.map((chat) => {
+            [...chats]
+              .sort((a, b) => b.updatedAt - a.updatedAt)
+              .filter((chat) =>
+                chat.title.toLowerCase().includes(searchQuery.toLowerCase().trim())
+              )
+              .map((chat) => {
               const isActive = chat.id === currentChatId
               return (
                 <div
