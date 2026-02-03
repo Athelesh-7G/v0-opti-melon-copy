@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server"
+import { UnifiedFileProcessor } from "@/lib/fileProcessing"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
@@ -8,12 +9,24 @@ const ALLOWED_TYPES = [
   "image/png",
   "image/gif",
   "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/tiff",
+  "image/bmp",
   // Documents
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/rtf",
   "text/plain",
   "text/markdown",
+  "text/rtf",
+  // Spreadsheets
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/csv",
+  // Presentations
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   // Code files
   "text/javascript",
   "text/typescript",
@@ -21,6 +34,12 @@ const ALLOWED_TYPES = [
   "text/css",
   "application/json",
   "text/x-python",
+  "text/x-java-source",
+  "text/x-c",
+  "text/x-c++",
+  "text/x-go",
+  "text/x-rust",
+  "text/x-shellscript",
 ]
 
 export async function POST(request: NextRequest) {
@@ -53,16 +72,8 @@ export async function POST(request: NextRequest) {
     // Read file content
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-
-    // For text-based files, we can extract the content directly
-    let textContent: string | null = null
-    if (
-      file.type.startsWith("text/") ||
-      file.type === "application/json" ||
-      file.type === "text/markdown"
-    ) {
-      textContent = buffer.toString("utf-8")
-    }
+    const processor = new UnifiedFileProcessor()
+    const processed = processor.processFile(buffer, file.type)
 
     // Generate a unique filename
     const timestamp = Date.now()
@@ -79,19 +90,13 @@ export async function POST(request: NextRequest) {
     let url: string
     let content: string | null = null
 
-    if (file.type.startsWith("image/")) {
-      // For images, create a base64 data URL
-      const base64 = buffer.toString("base64")
-      url = `data:${file.type};base64,${base64}`
-    } else if (textContent) {
-      // For text files, we'll use a placeholder URL and include content
-      url = `/uploads/${filename}`
-      content = textContent
+    if (processed.url) {
+      url = processed.url
     } else {
-      // For other files (PDF, Word docs), use a placeholder
-      // In production, these would be uploaded to cloud storage
       url = `/uploads/${filename}`
     }
+
+    content = processed.content
 
     return Response.json({
       success: true,

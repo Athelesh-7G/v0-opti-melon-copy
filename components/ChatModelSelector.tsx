@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Code, Pen, Brain, Globe, Sparkles } from "lucide-react"
+import { ChevronDown, Code, Pen, Brain, Globe, Sparkles, Image as ImageIcon } from "lucide-react"
 import {
   AVAILABLE_MODELS,
   MODEL_CATEGORIES,
@@ -21,6 +21,11 @@ const CATEGORY_CONFIG: Record<ModelCategory, { icon: React.ReactNode; color: str
     icon: <Sparkles className="h-3.5 w-3.5" />,
     color: "var(--melon-green)",
     bgColor: "color-mix(in srgb, var(--melon-green) 15%, transparent)",
+  },
+  image: {
+    icon: <ImageIcon className="h-3.5 w-3.5" />,
+    color: "var(--melon-red)",
+    bgColor: "var(--melon-red-muted)",
   },
   coders: {
     icon: <Code className="h-3.5 w-3.5" />,
@@ -195,7 +200,7 @@ export function ChatModelSelector({
   }
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
       {MODEL_CATEGORIES.map((category) => (
         <CategoryDropdown
           key={category.id}

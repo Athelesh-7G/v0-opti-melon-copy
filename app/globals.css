@@ -169,6 +169,15 @@
   }
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ============================================
    HYDRATION-SAFE MELON BACKGROUND
    Pure CSS - No JavaScript - No hydration issues
