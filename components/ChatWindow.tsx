@@ -12,7 +12,7 @@ import { Sidebar } from "./Sidebar"
 import { ChatModelSelector } from "./ChatModelSelector"
 import { FileUpload, type UploadedFile } from "./FileUpload"
 import { DEFAULT_SYSTEM_PROMPT, buildMessages } from "@/lib/promptTemplate"
-import { DEFAULT_MODEL_ID, getModelDisplayName } from "@/lib/models"
+import { DEFAULT_MODEL_ID, getModelDisplayName, getModelById } from "@/lib/models"
 import {
   saveMessages,
   loadMessages,
@@ -160,6 +160,8 @@ export function ChatWindow() {
     abortControllerRef.current = new AbortController()
 
     try {
+      const isImageModel = getModelById(model)?.category === "image"
+
       const conversationMessages = [...messages, userMessage].map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
@@ -167,16 +169,20 @@ export function ChatWindow() {
 
       const fullMessages = buildMessages(systemPrompt, conversationMessages)
 
-      const response = await fetch("/api/chat", {
+      const response = await fetch(isImageModel ? "/api/image" : "/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: fullMessages,
-          provider,
-          model,
-          params: { temperature, max_tokens: 4096 },
-          stream: streaming,
-        }),
+        body: JSON.stringify(
+          isImageModel
+            ? { prompt: messageContent, model }
+            : {
+                messages: fullMessages,
+                provider,
+                model,
+                params: { temperature, max_tokens: 4096 },
+                stream: streaming,
+              }
+        ),
         signal: abortControllerRef.current.signal,
       })
 
@@ -185,7 +191,7 @@ export function ChatWindow() {
         throw new Error(errorData.error || "Failed to get response")
       }
 
-      if (streaming && response.body) {
+      if (!isImageModel && streaming && response.body) {
         const reader = response.body.getReader()
         const decoder = new TextDecoder()
         let assistantContent = ""
@@ -233,12 +239,17 @@ export function ChatWindow() {
         }
       } else {
         const data = await response.json()
+        const assistantContent = isImageModel
+          ? data.imageUrl
+            ? `![Generated image](${data.imageUrl})`
+            : "Image generation failed."
+          : data.reply
         setMessages((prev) => [
           ...prev,
           {
             id: assistantId,
             role: "assistant",
-            content: data.reply,
+            content: assistantContent,
             timestamp: Date.now(),
           },
         ])

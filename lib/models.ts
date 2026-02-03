@@ -1,4 +1,4 @@
-export type ModelCategory = "general" | "coders" | "creators" | "reasoning" | "enterprise"
+export type ModelCategory = "general" | "image" | "coders" | "creators" | "reasoning" | "enterprise"
 
 export interface ModelInfo {
   id: string
@@ -19,6 +19,7 @@ export interface CategoryInfo {
 
 export const MODEL_CATEGORIES: CategoryInfo[] = [
   { id: "general", label: "General", icon: "" },
+  { id: "image", label: "Image", icon: "" },
   { id: "coders", label: "Coders", icon: "" },
   { id: "creators", label: "Creators", icon: "" },
   { id: "reasoning", label: "Reasoning", icon: "" },
@@ -42,6 +43,22 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
     ],
     tags: ["Instruction Following", "Math", "Structured Data", "Fast"],
     category: "general"
+  },
+  // Image
+  {
+    id: "stabilityai/stable-diffusion-xl-base-1.0",
+    name: "Stable Diffusion XL",
+    provider: "bytez",
+    contextLength: "Image generation",
+    description: "Text-to-image model for high-quality visuals and artistic renders.",
+    bestFor: [
+      "Image generation",
+      "Creative concepts",
+      "Visual exploration",
+      "Marketing mockups"
+    ],
+    tags: ["Image", "Creative", "Text-to-Image"],
+    category: "image"
   },
   // Coders
   {
