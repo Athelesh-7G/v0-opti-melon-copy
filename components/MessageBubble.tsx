@@ -145,8 +145,30 @@ function renderTextContent(text: string, keyPrefix: string, role: "user" | "assi
         </ol>
       )
     }
-    
+
     // Regular paragraph - clean text without markdown artifacts
+    const imageMatch = block.content.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
+    if (imageMatch) {
+      const altText = imageMatch[1] || "Generated image"
+      const imageUrl = imageMatch[2]
+      return (
+        <figure key={stableKey} className="my-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt={altText}
+            className="max-w-full rounded-lg border border-border shadow-sm"
+            loading="lazy"
+          />
+          {altText && (
+            <figcaption className={`mt-1 text-xs ${isUser ? 'text-white/80' : 'text-muted-foreground'}`}>
+              {altText}
+            </figcaption>
+          )}
+        </figure>
+      )
+    }
+
     return (
       <p 
         key={stableKey} 
