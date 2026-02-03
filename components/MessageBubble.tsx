@@ -5,6 +5,98 @@ import { useState, useCallback, useMemo, useId } from "react"
 import { Check, Copy, User, Pencil } from "lucide-react"
 import { extractCodeBlocks, parseBlockMarkdown } from "@/lib/markdown"
 
+function ImageAttachment({ altText, imageUrl }: { altText: string; imageUrl: string }) {
+  const downloadImage = async (format: "png" | "jpeg" | "webp" | "original") => {
+    try {
+      if (format === "original") {
+        const link = document.createElement("a")
+        link.href = imageUrl
+        link.download = altText || "generated-image"
+        link.click()
+        return
+      }
+
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const img = new Image()
+      const url = URL.createObjectURL(blob)
+      img.src = url
+
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve()
+      })
+
+      const canvas = document.createElement("canvas")
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return
+      ctx.drawImage(img, 0, 0)
+      canvas.toBlob(
+        (converted) => {
+          if (!converted) return
+          const link = document.createElement("a")
+          link.href = URL.createObjectURL(converted)
+          link.download = `${altText || "generated-image"}.${format}`
+          link.click()
+        },
+        `image/${format}`
+      )
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error("Image download failed", error)
+    }
+  }
+
+  const copyToClipboard = async () => {
+    try {
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      if (navigator.clipboard && "write" in navigator.clipboard) {
+        // @ts-expect-error ClipboardItem not in lib dom by default
+        const item = new ClipboardItem({ [blob.type]: blob })
+        await navigator.clipboard.write([item])
+      } else {
+        await navigator.clipboard.writeText(imageUrl)
+      }
+    } catch (error) {
+      console.error("Copy failed", error)
+    }
+  }
+
+  return (
+    <figure className="my-2 space-y-2">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl}
+        alt={altText}
+        className="max-w-full rounded-lg border border-border shadow-sm"
+        loading="lazy"
+      />
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <button className="px-2 py-1 rounded border border-border hover:bg-secondary" onClick={() => downloadImage("original")}>
+          Download Original
+        </button>
+        <button className="px-2 py-1 rounded border border-border hover:bg-secondary" onClick={() => downloadImage("png")}>
+          PNG
+        </button>
+        <button className="px-2 py-1 rounded border border-border hover:bg-secondary" onClick={() => downloadImage("jpeg")}>
+          JPEG
+        </button>
+        <button className="px-2 py-1 rounded border border-border hover:bg-secondary" onClick={() => downloadImage("webp")}>
+          WebP
+        </button>
+        <button className="px-2 py-1 rounded border border-border hover:bg-secondary" onClick={copyToClipboard}>
+          Copy to Clipboard
+        </button>
+      </div>
+      {altText && (
+        <figcaption className="text-xs text-muted-foreground">{altText}</figcaption>
+      )}
+    </figure>
+  )
+}
+
 interface MessageBubbleProps {
   role: "user" | "assistant"
   content: string
@@ -152,20 +244,9 @@ function renderTextContent(text: string, keyPrefix: string, role: "user" | "assi
       const altText = imageMatch[1] || "Generated image"
       const imageUrl = imageMatch[2]
       return (
-        <figure key={stableKey} className="my-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageUrl}
-            alt={altText}
-            className="max-w-full rounded-lg border border-border shadow-sm"
-            loading="lazy"
-          />
-          {altText && (
-            <figcaption className={`mt-1 text-xs ${isUser ? 'text-white/80' : 'text-muted-foreground'}`}>
-              {altText}
-            </figcaption>
-          )}
-        </figure>
+        <div key={stableKey} className={isUser ? "text-white" : "text-foreground"}>
+          <ImageAttachment altText={altText} imageUrl={imageUrl} />
+        </div>
       )
     }
 

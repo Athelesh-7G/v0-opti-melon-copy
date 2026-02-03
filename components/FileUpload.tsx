@@ -18,6 +18,7 @@ export interface UploadedFile {
   size: number
   url: string
   preview?: string
+  content?: string | null
 }
 
 interface FileUploadProps {
@@ -28,13 +29,32 @@ interface FileUploadProps {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ACCEPTED_FILE_TYPES = {
-  image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+  image: [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/heic",
+    "image/heif",
+    "image/tiff",
+    "image/bmp",
+  ],
   document: [
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/rtf",
     "text/plain",
     "text/markdown",
+    "text/rtf",
+  ],
+  spreadsheet: [
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/csv",
+  ],
+  presentation: [
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   ],
   code: [
     "text/javascript",
@@ -43,12 +63,20 @@ const ACCEPTED_FILE_TYPES = {
     "text/css",
     "application/json",
     "text/x-python",
+    "text/x-java-source",
+    "text/x-c",
+    "text/x-c++",
+    "text/x-go",
+    "text/x-rust",
+    "text/x-shellscript",
   ],
 }
 
 const ALL_ACCEPTED_TYPES = [
   ...ACCEPTED_FILE_TYPES.image,
   ...ACCEPTED_FILE_TYPES.document,
+  ...ACCEPTED_FILE_TYPES.spreadsheet,
+  ...ACCEPTED_FILE_TYPES.presentation,
   ...ACCEPTED_FILE_TYPES.code,
 ]
 
@@ -133,6 +161,7 @@ export function FileUpload({ onFilesChange, files, disabled }: FileUploadProps) 
           size: file.size,
           url: data.url,
           preview,
+          content: data.content ?? null,
         })
       }
 
@@ -209,7 +238,11 @@ export function FileUpload({ onFilesChange, files, disabled }: FileUploadProps) 
           ref={documentInputRef}
           type="file"
           multiple
-          accept={ACCEPTED_FILE_TYPES.document.join(",")}
+          accept={[
+            ...ACCEPTED_FILE_TYPES.document,
+            ...ACCEPTED_FILE_TYPES.spreadsheet,
+            ...ACCEPTED_FILE_TYPES.presentation,
+          ].join(",")}
           onChange={handleFileSelect}
           className="hidden"
           disabled={disabled || isUploading}

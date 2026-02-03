@@ -200,7 +200,7 @@ export function ChatModelSelector({
   }
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
+    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
       {MODEL_CATEGORIES.map((category) => (
         <CategoryDropdown
           key={category.id}

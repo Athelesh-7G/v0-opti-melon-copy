@@ -169,6 +169,36 @@
   }
 }
 
+@keyframes flowingSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.flowing-loader {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: conic-gradient(#3B82F6, #8B5CF6, #22D3EE, #3B82F6);
+  -webkit-mask: radial-gradient(farthest-side, transparent 65%, #000 66%);
+  mask: radial-gradient(farthest-side, transparent 65%, #000 66%);
+  animation: flowingSpin 2s linear infinite;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+  display: inline-block;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ============================================
    HYDRATION-SAFE MELON BACKGROUND
    Pure CSS - No JavaScript - No hydration issues

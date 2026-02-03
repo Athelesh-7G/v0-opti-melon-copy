@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Send, Loader2, Sparkles, Square, Code, Pen, Brain, Globe, Sun, Moon } from "lucide-react"
+import { Send, Sparkles, Square, Code, Pen, Brain, Globe, Sun, Moon, Wand2 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -13,6 +13,8 @@ import { ChatModelSelector } from "./ChatModelSelector"
 import { FileUpload, type UploadedFile } from "./FileUpload"
 import { DEFAULT_SYSTEM_PROMPT, buildMessages } from "@/lib/promptTemplate"
 import { DEFAULT_MODEL_ID, getModelDisplayName, getModelById } from "@/lib/models"
+import { AnimatedLoader } from "./AnimatedLoader"
+import { getRoutingRecommendation, type RoutingResult } from "@/lib/intentRouting"
 import {
   saveMessages,
   loadMessages,
@@ -59,6 +61,8 @@ export function ChatWindow() {
   const [streaming, setStreaming] = useState(true)
   const [systemPrompt, setSystemPrompt] = useState<string | null>(DEFAULT_SYSTEM_PROMPT)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [routingNotice, setRoutingNotice] = useState<RoutingResult | null>(null)
+  const [routingModeActive, setRoutingModeActive] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -111,6 +115,12 @@ export function ChatWindow() {
     saveSettings({ provider, model, temperature, streaming, systemPrompt })
   }, [provider, model, temperature, streaming, systemPrompt])
 
+  const handleModelChange = useCallback((modelId: string) => {
+    setModel(modelId)
+    setRoutingModeActive(false)
+    setRoutingNotice(null)
+  }, [])
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
@@ -131,11 +141,16 @@ export function ChatWindow() {
     let messageContent = input.trim()
     if (uploadedFiles.length > 0) {
       const fileDescriptions = uploadedFiles.map((f) => {
+        const header = `[File: ${f.name} (${f.type || "unknown"})]`
         if (f.type.startsWith("image/")) {
-          return `[Image: ${f.name}]`
+          return `${header}\nImage URL: ${f.url}`
         }
-        return `[File: ${f.name} (${f.type})]`
-      }).join("\n")
+        if (f.content) {
+          const trimmed = f.content.length > 4000 ? `${f.content.slice(0, 4000)}\n...[truncated]` : f.content
+          return `${header}\nContent:\n${trimmed}`
+        }
+        return `${header}\nNote: No extractable text content.`
+      }).join("\n\n")
       messageContent = messageContent
         ? `${messageContent}\n\nAttached files:\n${fileDescriptions}`
         : `Attached files:\n${fileDescriptions}`
@@ -361,6 +376,23 @@ export function ChatWindow() {
     textareaRef.current?.focus()
   }, [])
 
+  const handleRouteModel = useCallback(() => {
+    const prompt = input.trim()
+    if (!prompt) return
+    const result = getRoutingRecommendation(prompt)
+    setModel(result.modelId)
+    setRoutingNotice(result)
+    setRoutingModeActive(true)
+  }, [input])
+
+  const handleQuickAction = useCallback((prompt: string) => {
+    setInput(prompt)
+    const result = getRoutingRecommendation(prompt)
+    setModel(result.modelId)
+    setRoutingNotice(result)
+    setRoutingModeActive(true)
+  }, [])
+
   // Initialize with a new chat
   useEffect(() => {
     if (!currentChatId && chats.length === 0) {
@@ -453,18 +485,20 @@ export function ChatWindow() {
               <div className="flex flex-wrap justify-center gap-3">
                 {[
                   { text: "Help me code", icon: "code" },
-                  { text: "Create content", icon: "pen" },
-                  { text: "Analyze this", icon: "brain" },
-                  { text: "Business task", icon: "globe" },
+                  { text: "Write creatively", icon: "pen" },
+                  { text: "Analyze data", icon: "brain" },
+                  { text: "Generate image", icon: "image" },
+                  { text: "Research topic", icon: "globe" },
                 ].map((suggestion) => (
                   <button
                     key={suggestion.text}
-                    onClick={() => setInput(suggestion.text)}
+                    onClick={() => handleQuickAction(suggestion.text)}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-border bg-card hover:bg-secondary hover:border-primary/30 transition-all duration-200 text-sm hover:scale-105 text-foreground shadow-sm"
                   >
                     {suggestion.icon === "code" && <Code className="h-3.5 w-3.5 text-primary" />}
                     {suggestion.icon === "pen" && <Pen className="h-3.5 w-3.5 text-primary" />}
                     {suggestion.icon === "brain" && <Brain className="h-3.5 w-3.5 text-primary" />}
+                    {suggestion.icon === "image" && <Sparkles className="h-3.5 w-3.5 text-primary" />}
                     {suggestion.icon === "globe" && <Globe className="h-3.5 w-3.5 text-primary" />}
                     <span className="font-medium">{suggestion.text}</span>
                   </button>
@@ -482,24 +516,9 @@ export function ChatWindow() {
                 />
               ))}
               {isLoading && messages[messages.length - 1]?.role === "user" && (
-                <div className="flex gap-3" style={{ animation: 'messageEnter 0.3s ease-out' }}>
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-accent/15 text-accent">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </div>
-                  <div className="border border-border rounded-2xl px-4 py-3 shadow-sm bg-card">
-                    <div className="flex items-center gap-2">
-                      <span className="text-foreground/70">Generating response</span>
-                      <span className="flex gap-1" aria-hidden="true">
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce bg-primary" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce bg-primary" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce bg-primary" style={{ animationDelay: "300ms" }} />
-                      </span>
-                    </div>
-                    <p className="text-xs mt-1 hidden sm:block text-muted-foreground">
-                      Press <kbd className="px-1 py-0.5 rounded text-[10px] border border-border bg-secondary">Esc</kbd> to stop
-                    </p>
-                  </div>
-                </div>
+                <AnimatedLoader
+                  type={getModelById(model)?.category === "image" ? "image" : "text"}
+                />
               )}
               <div ref={messagesEndRef} />
             </div>
@@ -529,7 +548,23 @@ export function ChatWindow() {
               />
             </div>
           )}
-          
+
+          {routingNotice && (
+            <div className="mb-2 rounded-xl border border-border bg-card/80 px-3 py-2 text-xs text-muted-foreground flex items-center gap-2 justify-between">
+              <div>
+                <span className="font-semibold text-foreground">Routed for {routingNotice.intentLabel}</span>
+                <span className="ml-2 text-[10px] text-muted-foreground">Confidence {routingNotice.confidence}%</span>
+              </div>
+              <button
+                type="button"
+                className="text-[10px] text-primary hover:underline"
+                onClick={() => setRoutingNotice(null)}
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           <div className="flex gap-2.5 items-end">
             <div className="flex-1 relative">
               <Textarea
@@ -559,20 +594,34 @@ export function ChatWindow() {
                 <Square className="h-4 w-4 fill-current" />
               </Button>
             ) : (
-              <Button
-                onClick={sendMessage}
-                disabled={!input.trim() && uploadedFiles.length === 0}
-                size="icon"
-                className="h-[52px] w-[52px] rounded-xl melon-gradient shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 text-white"
-                style={{ boxShadow: '0 3px 12px var(--melon-red-muted)' }}
-              >
-                <Send className="h-4.5 w-4.5" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleRouteModel}
+                  disabled={!input.trim()}
+                  size="icon"
+                  className={`h-[52px] w-[52px] rounded-xl transition-all duration-200 border flex-shrink-0 ${
+                    routingModeActive ? "bg-primary/10 border-primary text-primary" : "bg-secondary"
+                  }`}
+                  title="Route model automatically"
+                  aria-label="Route model automatically"
+                >
+                  <Wand2 className="h-4.5 w-4.5" />
+                </Button>
+                <Button
+                  onClick={sendMessage}
+                  disabled={!input.trim() && uploadedFiles.length === 0}
+                  size="icon"
+                  className="h-[52px] w-[52px] rounded-xl melon-gradient shadow-md hover:scale-105 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 text-white"
+                  style={{ boxShadow: '0 3px 12px var(--melon-red-muted)' }}
+                >
+                  <Send className="h-4.5 w-4.5" />
+                </Button>
+              </div>
             )}
           </div>
           
           {/* Bottom toolbar with file upload + model selectors (all left-aligned) */}
-          <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border">
+          <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-border">
             <FileUpload
               files={[]}
               onFilesChange={(newFiles) => setUploadedFiles((prev) => [...prev, ...newFiles])}
@@ -580,7 +629,7 @@ export function ChatWindow() {
             />
             <ChatModelSelector
               selectedModel={model}
-              onModelChange={setModel}
+              onModelChange={handleModelChange}
             />
           </div>
         </div>
@@ -595,7 +644,7 @@ export function ChatWindow() {
           streaming={streaming}
           systemPrompt={systemPrompt}
           onProviderChange={setProvider}
-          onModelChange={setModel}
+          onModelChange={handleModelChange}
           onTemperatureChange={setTemperature}
           onStreamingChange={setStreaming}
           onSystemPromptChange={setSystemPrompt}

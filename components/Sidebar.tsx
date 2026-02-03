@@ -75,8 +75,8 @@ export function Sidebar({
         />
       )}
 
-      {/* Peek strip - visible when sidebar is closed (desktop only) */}
-      {!isMobile && !isOpen && (
+      {/* Peek strip - visible when sidebar is closed */}
+      {!isOpen && (
         <button
           onClick={onToggle}
           className="fixed left-0 top-0 h-screen w-10 z-40 flex items-center justify-center bg-sidebar/50 backdrop-blur-md border-r border-sidebar-border hover:bg-sidebar/80 transition-colors group"
