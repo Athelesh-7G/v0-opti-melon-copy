@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
         Authorization: apiKey,
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ text: prompt }),
     })
 
     if (!response.ok) {
