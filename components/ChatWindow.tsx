@@ -487,9 +487,6 @@ export function ChatWindow() {
     Built by Athelesh Balachandran
   </p>
 </div>
-              <p className="text-xs mb-6 max-w-sm text-muted-foreground">
-                Upload files &bull; Switch instantly &bull; Chat now
-              </p>
               <div className="flex flex-wrap justify-center gap-3">
                 {[
                   { text: "Help me code", icon: "code" },
