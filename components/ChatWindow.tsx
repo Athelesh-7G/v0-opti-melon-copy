@@ -518,9 +518,7 @@ export function ChatWindow() {
     </button>
   ))}
 </div>
-                ))}
-              </div>
-            </div>
+   </div>
           ) : (
             <div className="space-y-4">
               {messages.map((message) => (
