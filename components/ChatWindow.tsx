@@ -476,17 +476,18 @@ export function ChatWindow() {
               <h2 className="text-3xl font-bold mb-4 tracking-tight text-foreground">
                 Welcome to OptiMelon
               </h2>
-              <div className="mx-auto px-4 sm:px-6 lg:px-8 text-center text-foreground">
+           <div className="mx-auto px-4 sm:px-6 lg:px-8 text-center text-foreground">
   <p className="text-xl md:text-2xl font-semibold leading-tight mb-2">
     Powerful AI, Unified.
   </p>
-  <p className="text-base md:text-lg font-medium leading-relaxed mb-3">
+  <p className="text-base md:text-lg font-medium leading-relaxed mb-1">
     Qwen • Deepseek • SDXL • GLM • Kimi • Llama — all in one platform.
   </p>
-  <p className="text-sm font-normal mt-1">
+  <p className="text-sm font-normal mb-5">
     Built by Athelesh Balachandran
   </p>
 </div>
+
 <div className="flex flex-wrap justify-center gap-3">
   {[
     { text: "Help me code", icon: "code" },
