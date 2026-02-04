@@ -72,13 +72,22 @@ function CategoryDropdown({
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: Event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false)
       }
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("pointerdown", handleClickOutside)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("pointerdown", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
+    }
   }, [])
 
   const handleModelSelect = (modelId: string) => {
@@ -90,7 +99,9 @@ function CategoryDropdown({
     <div className="relative" ref={dropdownRef}>
       {/* Category Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-200 text-xs font-medium ${
           selectedInThisCategory ? "ring-1" : "hover:border-border"
         }`}
@@ -112,7 +123,7 @@ function CategoryDropdown({
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute bottom-full left-0 mb-2 z-50 min-w-[220px] rounded-lg border shadow-xl overflow-hidden bg-popover"
+          className="absolute bottom-full left-0 mb-2 z-[60] min-w-[220px] rounded-lg border shadow-xl overflow-hidden bg-popover"
           style={{
             borderColor: "var(--border)",
             backdropFilter: "blur(20px)",
@@ -140,9 +151,10 @@ function CategoryDropdown({
             {models.map((model) => (
               <button
                 key={model.id}
+                type="button"
                 onClick={() => handleModelSelect(model.id)}
-                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md transition-all duration-200 text-left ${
-                  selectedModel === model.id ? "" : "hover:bg-secondary"
+                className={`w-full flex min-h-[44px] items-center gap-2.5 px-2.5 py-2 rounded-md transition-all duration-200 text-left ${
+                  selectedModel === model.id ? "" : "hover:bg-secondary active:bg-secondary"
                 }`}
                 style={{
                   background: selectedModel === model.id ? config.bgColor : "transparent",
@@ -200,7 +212,7 @@ export function ChatModelSelector({
   }
 
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
+    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible max-w-[100vw]">
       {MODEL_CATEGORIES.map((category) => (
         <CategoryDropdown
           key={category.id}

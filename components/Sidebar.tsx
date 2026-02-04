@@ -89,14 +89,21 @@ export function Sidebar({
         }}
       >
         {/* Sidebar Header with Toggle */}
-        <div className="flex items-center justify-between p-3 border-b border-sidebar-border">
+        <div
+          className="flex items-center justify-between p-3 border-b border-sidebar-border"
+          style={{
+            paddingTop: "calc(0.75rem + env(safe-area-inset-top))",
+            paddingLeft: "calc(0.75rem + env(safe-area-inset-left))",
+            paddingRight: "calc(0.75rem + env(safe-area-inset-right))",
+          }}
+        >
           <div className="flex items-center gap-2">
             <span className="text-lg" role="img" aria-label="watermelon">🍉</span>
             <span className="text-sm font-medium text-sidebar-foreground">Chats</span>
           </div>
           <button
             onClick={onToggle}
-            className="p-1.5 rounded-md hover:bg-sidebar-accent transition-colors text-muted-foreground hover:text-sidebar-foreground"
+            className="h-11 w-11 rounded-md hover:bg-sidebar-accent transition-colors text-muted-foreground hover:text-sidebar-foreground flex items-center justify-center"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-4 w-4" />
