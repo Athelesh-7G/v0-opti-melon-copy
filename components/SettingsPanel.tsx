@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ModelSelector } from "./ModelSelector"
 import { DEFAULT_SYSTEM_PROMPT } from "@/lib/promptTemplate"
+import { GoogleSignInModal } from "@/src/components/auth/GoogleSignInModal"
 import {
   Collapsible,
   CollapsibleContent,
@@ -223,6 +224,10 @@ export function SettingsPanel({
 
                 {/* Danger Zone */}
                 <div className="pt-4 border-t border-border">
+                  <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2">
+                    <span className="text-xs text-muted-foreground">Account</span>
+                    <GoogleSignInModal triggerLabel="Sign In" />
+                  </div>
                   <Button
                     variant="destructive"
                     onClick={onClearChat}
