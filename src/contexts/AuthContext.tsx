@@ -1,131 +1,152 @@
 "use client"
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react"
-import { buildGoogleOAuthUrl, isFirebaseConfigured, parseGoogleHash } from "@/src/lib/firebase"
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  memo,
+} from "react"
+import type { User } from "@supabase/supabase-js"
+import { getSupabaseClient } from "@/src/lib/supabase"
 
-interface AuthUser {
-  name: string
-  email?: string
-  avatarUrl?: string
-}
+/**
+ * Supabase schema + RLS (run in Supabase SQL editor):
+ *
+ * CREATE TABLE profiles (
+ *   id UUID REFERENCES auth.users PRIMARY KEY,
+ *   email TEXT UNIQUE,
+ *   full_name TEXT,
+ *   avatar_url TEXT,
+ *   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+ *   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+ * );
+ * ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ * CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+ * CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+ */
 
 interface AuthContextValue {
-  user: AuthUser | null
-  isLoading: boolean
-  error: string | null
-  isOpen: boolean
-  openSignIn: () => void
-  closeSignIn: () => void
+  user: User | null
+  loading: boolean
+  authReady: boolean
   signInWithGoogle: () => Promise<void>
-  signOut: () => void
-  clearError: () => void
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-const POPUP_FEATURES = "width=520,height=640,left=200,top=120,resizable=yes,scrollbars=yes,status=no"
+function AuthProviderBase({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
-function buildStateSeed(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
+  const supabase = useMemo(() => getSupabaseClient(), [])
+  const authReady = useMemo(() => Boolean(supabase), [supabase])
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isOpen, setIsOpen] = useState(false)
-
-  const openSignIn = useCallback(() => setIsOpen(true), [])
-  const closeSignIn = useCallback(() => {
-    setIsOpen(false)
-    setError(null)
-  }, [])
-  const clearError = useCallback(() => setError(null), [])
-
-  const signOut = useCallback(() => {
-    setUser(null)
-  }, [])
-
-  const signInWithGoogle = useCallback(async () => {
-    setError(null)
-
-    if (typeof window === "undefined") return
-    if (!isFirebaseConfigured()) {
-      setError("Auth is not configured yet. Add Firebase and Google env variables to continue.")
-      return
-    }
-
-    setIsLoading(true)
-    const state = buildStateSeed()
-
+  const syncProfile = useCallback(async (nextUser: User) => {
+    if (!supabase) return
     try {
-      const authUrl = buildGoogleOAuthUrl(state)
-      const popup = window.open(authUrl, "optimelon-google-signin", POPUP_FEATURES)
-
-      if (!popup) {
-        throw new Error("Popup blocked. Please allow popups and try again.")
+      const profile = {
+        id: nextUser.id,
+        email: nextUser.email ?? null,
+        full_name: nextUser.user_metadata?.full_name ?? nextUser.user_metadata?.name ?? null,
+        avatar_url: nextUser.user_metadata?.avatar_url ?? null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
 
-      await new Promise<void>((resolve, reject) => {
-        const timeout = window.setTimeout(() => {
-          reject(new Error("Google sign-in timed out. Please try again."))
-        }, 90_000)
-
-        const tick = window.setInterval(() => {
-          if (popup.closed) {
-            window.clearInterval(tick)
-            window.clearTimeout(timeout)
-            reject(new Error("Sign-in cancelled."))
-            return
-          }
-
-          try {
-            if (!popup.location.href.startsWith(window.location.origin)) return
-            const parsed = parseGoogleHash(popup.location.hash)
-            if (!parsed.idToken && !parsed.accessToken) return
-            if (parsed.state !== state) {
-              throw new Error("Security validation failed. Please retry sign-in.")
-            }
-
-            setUser({ name: "Athelesh", email: "authenticated@google" })
-            popup.close()
-            window.clearInterval(tick)
-            window.clearTimeout(timeout)
-            resolve()
-          } catch (err) {
-            if (err instanceof DOMException) return
-            window.clearInterval(tick)
-            window.clearTimeout(timeout)
-            reject(err)
-          }
-        }, 250)
-      })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to sign in with Google."
-      setError(message)
-      throw err
-    } finally {
-      setIsLoading(false)
+      await supabase.from("profiles").upsert(profile, { onConflict: "id" })
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Supabase profile sync failed.", error)
+      }
     }
-  }, [])
+  }, [supabase])
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (!supabase) {
+      setLoading(false)
+      setUser(null)
+      return () => {
+        isMounted = false
+      }
+    }
+
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        if (!isMounted) return
+        setUser(data.session?.user ?? null)
+        setLoading(false)
+      })
+      .catch((error) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to read Supabase session.", error)
+        }
+        if (isMounted) setLoading(false)
+      })
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return
+      const nextUser = session?.user ?? null
+      setUser(nextUser)
+      setLoading(false)
+      if (nextUser) {
+        void syncProfile(nextUser)
+      }
+    })
+
+    return () => {
+      isMounted = false
+      subscription?.subscription.unsubscribe()
+    }
+  }, [supabase, syncProfile])
+
+  const signInWithGoogle = useCallback(async () => {
+    if (!supabase) return
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin,
+        },
+      })
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Supabase Google sign-in failed.", error)
+      }
+    }
+  }, [supabase])
+
+  const signOut = useCallback(async () => {
+    if (!supabase) return
+    try {
+      await supabase.auth.signOut()
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Supabase sign-out failed.", error)
+      }
+    }
+  }, [supabase])
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      isLoading,
-      error,
-      isOpen,
-      openSignIn,
-      closeSignIn,
+      loading,
+      authReady,
       signInWithGoogle,
       signOut,
-      clearError,
     }),
-    [user, isLoading, error, isOpen, openSignIn, closeSignIn, signInWithGoogle, signOut, clearError]
+    [user, loading, authReady, signInWithGoogle, signOut]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
+
+export const AuthProvider = memo(AuthProviderBase)
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext)
