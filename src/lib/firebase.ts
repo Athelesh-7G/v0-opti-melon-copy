@@ -81,6 +81,30 @@ async function loadModules() {
     authModule: authModule as FirebaseAuthModule,
     firestoreModule: firestoreModule as FirebaseFirestoreModule,
   }
+
+  firebaseClientPromise = loadFirebaseModules()
+    .then(({ appModule, authModule, firestoreModule }) => {
+      const existingApps = appModule.getApps()
+      const app = existingApps.length > 0 ? existingApps[0] : appModule.initializeApp(firebaseConfig)
+      const auth = authModule.getAuth(app)
+      const db = firestoreModule.getFirestore(app)
+
+      return {
+        auth,
+        db,
+        authModule,
+        firestoreModule,
+      }
+    })
+    .catch((error) => {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Failed to initialize Firebase modules.", error)
+      }
+      console.warn("Firebase unavailable; auth disabled.")
+      return null
+    })
+
+  return firebaseClientPromise
 }
 
 export async function getFirebaseClient(): Promise<FirebaseClient | null> {
