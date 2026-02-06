@@ -484,41 +484,37 @@ export function ChatWindow() {
               <h2 className="text-3xl font-bold mb-4 tracking-tight text-foreground">
                 Welcome to OptiMelon
               </h2>
-            <div className="mx-auto px-4 sm:px-6 lg:px-8 text-center text-foreground">
-  <p className="text-xl md:text-2xl font-semibold leading-tight mb-2">
-    Powerful AI, Unified.
-  </p>
-  <p className="text-base md:text-lg font-medium leading-relaxed mb-1">
-    Qwen • Deepseek • SDXL • GLM • Kimi • Llama — all in one platform.
-  </p>
-  <p className="text-sm font-normal mb-5">
-    Built by Athelesh Balachandran
-  </p>
-</div>
-
-<div className="flex flex-wrap justify-center gap-3">
-  {[
-    { text: "Help me code", icon: "code" },
-    { text: "Write creatively", icon: "pen" },
-    { text: "Analyze data", icon: "brain" },
-    { text: "Generate image", icon: "image" },
-    { text: "Research topic", icon: "globe" },
-  ].map((suggestion) => (
-    <button
-      key={suggestion.text}
-      onClick={() => handleQuickAction(suggestion.text)}
-      className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-border bg-card hover:bg-secondary hover:border-primary/30 transition-all duration-200 text-sm hover:scale-105 text-foreground shadow-sm"
-    >
-      {suggestion.icon === "code" && <Code className="h-3.5 w-3.5 text-primary" />}
-      {suggestion.icon === "pen" && <Pen className="h-3.5 w-3.5 text-primary" />}
-      {suggestion.icon === "brain" && <Brain className="h-3.5 w-3.5 text-primary" />}
-      {suggestion.icon === "image" && <Sparkles className="h-3.5 w-3.5 text-primary" />}
-      {suggestion.icon === "globe" && <Globe className="h-3.5 w-3.5 text-primary" />}
-      <span className="font-medium">{suggestion.text}</span>
-    </button>
-  ))}
-</div>
-   </div>
+              <div className="max-w-lg mb-5 text-center text-foreground">
+                <p className="text-sm font-medium leading-relaxed">Powerful AI, Unified.</p>
+                <p className="text-sm font-medium leading-relaxed">Qwen • Deepseek • SDXL • GLM • Kimi • Llama — all in one platform.</p>
+                <p className="mt-2 text-xs font-normal">Built by Athelesh Balachandran</p>
+              </div>
+              <p className="text-xs mb-6 max-w-sm text-muted-foreground">
+                Upload files &bull; Switch instantly &bull; Chat now
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                {[
+                  { text: "Help me code", icon: "code" },
+                  { text: "Write creatively", icon: "pen" },
+                  { text: "Analyze data", icon: "brain" },
+                  { text: "Generate image", icon: "image" },
+                  { text: "Research topic", icon: "globe" },
+                ].map((suggestion) => (
+                  <button
+                    key={suggestion.text}
+                    onClick={() => handleQuickAction(suggestion.text)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-border bg-card hover:bg-secondary hover:border-primary/30 transition-all duration-200 text-sm hover:scale-105 text-foreground shadow-sm"
+                  >
+                    {suggestion.icon === "code" && <Code className="h-3.5 w-3.5 text-primary" />}
+                    {suggestion.icon === "pen" && <Pen className="h-3.5 w-3.5 text-primary" />}
+                    {suggestion.icon === "brain" && <Brain className="h-3.5 w-3.5 text-primary" />}
+                    {suggestion.icon === "image" && <Sparkles className="h-3.5 w-3.5 text-primary" />}
+                    {suggestion.icon === "globe" && <Globe className="h-3.5 w-3.5 text-primary" />}
+                    <span className="font-medium">{suggestion.text}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               {messages.map((message) => (
