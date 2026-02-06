@@ -6,6 +6,7 @@ import './globals.css'
 
 import { Poppins as V0_Font_Poppins, Geist_Mono as V0_Font_Geist_Mono, Vollkorn as V0_Font_Vollkorn } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/src/contexts/AuthContext"
 
 // Initialize fonts
 const _poppins = V0_Font_Poppins({ subsets: ['latin'], weight: ["100","200","300","400","500","600","700","800","900"] })
@@ -35,6 +36,13 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1.0,
+  maximumScale: 1.0,
+  userScalable: false,
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,14 +51,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>
