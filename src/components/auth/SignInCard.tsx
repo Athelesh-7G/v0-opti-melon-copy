@@ -1,29 +1,11 @@
 "use client"
 
-import React, { memo, useEffect, useMemo, useState } from "react"
+import React from "react"
 import { useAuth } from "@/src/contexts/AuthContext"
-
-function WatermelonIcon() {
-  return (
-    <svg
-      viewBox="0 0 64 64"
-      aria-hidden="true"
-      className="h-12 w-12 text-primary"
-      fill="currentColor"
-    >
-      <path d="M32 6C18.1 6 6 18.1 6 32c0 14.3 11.7 26 26 26s26-11.7 26-26C58 18.1 45.9 6 32 6zm0 46C20.4 52 12 43.6 12 32S20.4 12 32 12s20 8.4 20 20-8.4 20-20 20z" />
-      <path d="M32 16c-8.8 0-16 7.2-16 16h32c0-8.8-7.2-16-16-16z" />
-    </svg>
-  )
-}
 
 function GoogleIcon() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className="h-5 w-5"
-    >
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
       <path
         fill="#EA4335"
         d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.3-2 3v2.5h3.2c1.9-1.8 3-4.5 3-7.6 0-.7-.1-1.2-.2-1.8H12z"
@@ -44,58 +26,33 @@ function GoogleIcon() {
   )
 }
 
-function SignInCardBase() {
+export function SignInCard() {
   const { authReady, user, signInWithGoogle, loading } = useAuth()
-  const [isExiting, setIsExiting] = useState(false)
-  const [showToast, setShowToast] = useState(false)
 
-  const shouldRender = useMemo(() => authReady && (!user || isExiting), [authReady, user, isExiting])
-
-  useEffect(() => {
-    if (!user) return
-    setIsExiting(true)
-    setShowToast(true)
-    const exitTimer = window.setTimeout(() => setIsExiting(false), 300)
-    const toastTimer = window.setTimeout(() => setShowToast(false), 2000)
-    return () => {
-      window.clearTimeout(exitTimer)
-      window.clearTimeout(toastTimer)
-    }
-  }, [user])
-
-  if (!shouldRender) return null
-
-  const welcomeName = user?.user_metadata?.full_name || user?.user_metadata?.name || "there"
+  if (!authReady || user) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-background/50 px-4 py-6 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:px-6">
-      <section
-        className={`mx-4 w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl sm:p-10 ${
-          isExiting
-            ? "animate-[fade-out_0.3s_ease-in_forwards]"
-            : "opacity-0 scale-95 animate-[fade-in_0.4s_ease-out_forwards,scale_0.4s_ease-out_forwards]"
-        }`}
-        aria-live="polite"
-        role="dialog"
-      >
-        <div className="flex flex-col items-center">
-          <div className="mb-6">
-            <WatermelonIcon />
+    <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-background/50 px-4 py-6 backdrop-blur-sm">
+      <section className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-2xl sm:p-10">
+        <div className="mb-6 flex justify-center">
+          <div className="h-12 w-12 rounded-full bg-primary/10 text-primary">
+            <span className="flex h-full w-full items-center justify-center text-xl font-bold">
+              O
+            </span>
           </div>
-          <h1 className="mb-2 text-center text-3xl font-bold tracking-tight text-foreground">
-            Welcome to OptiMelon
-          </h1>
-          <p className="mb-8 text-center text-sm text-foreground/70">
-            Sign in to save chats, sync history, and personalize your AI
-          </p>
         </div>
+        <h1 className="mb-2 text-center text-3xl font-bold text-foreground">
+          Welcome to OptiMelon
+        </h1>
+        <p className="mb-8 text-center text-sm text-foreground/70">
+          Sign in to save chats, sync history, and personalize your AI
+        </p>
 
         <button
           type="button"
           onClick={signInWithGoogle}
-          aria-label="Continue with Google"
           disabled={loading}
-          className="flex min-h-[48px] w-full items-center justify-center gap-3 rounded-xl border-2 border-border bg-card px-6 py-3.5 text-base font-semibold text-foreground shadow-md transition-all duration-200 hover:border-primary/40 hover:bg-secondary hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
+          className="flex min-h-[48px] w-full items-center justify-center gap-3 rounded-xl border-2 border-border bg-card px-6 py-3.5 text-base font-semibold text-foreground shadow-md transition hover:border-primary/40 hover:bg-secondary"
         >
           <GoogleIcon />
           Continue with Google
@@ -110,21 +67,7 @@ function SignInCardBase() {
         <p className="text-center text-xs text-foreground/50">
           Your data is secure and private
         </p>
-
-        {user && (
-          <p className="mt-4 text-center text-sm font-semibold text-green-400 animate-pulse">
-            Welcome back, {welcomeName}!
-          </p>
-        )}
       </section>
-
-      {showToast && (
-        <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-border bg-card/90 px-4 py-2 text-xs text-foreground shadow-lg backdrop-blur">
-          Signed in successfully.
-        </div>
-      )}
     </div>
   )
 }
-
-export const SignInCard = memo(SignInCardBase)

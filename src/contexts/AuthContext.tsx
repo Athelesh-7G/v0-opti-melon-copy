@@ -7,29 +7,18 @@ import React, {
   useEffect,
   useMemo,
   useState,
-  memo,
 } from "react"
-import type { User } from "@supabase/supabase-js"
-import { getSupabaseClient } from "@/src/lib/supabase"
+import { getFirebaseClient, type FirebaseUser } from "@/src/lib/firebase"
 
-/**
- * Supabase schema + RLS (run in Supabase SQL editor):
- *
- * CREATE TABLE profiles (
- *   id UUID REFERENCES auth.users PRIMARY KEY,
- *   email TEXT UNIQUE,
- *   full_name TEXT,
- *   avatar_url TEXT,
- *   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
- *   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
- * );
- * ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
- * CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
- * CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
- */
+type AuthUser = {
+  id: string
+  name: string
+  email?: string
+  avatarUrl?: string
+}
 
-interface AuthContextValue {
-  user: User | null
+type AuthContextValue = {
+  user: AuthUser | null
   loading: boolean
   authReady: boolean
   signInWithGoogle: () => Promise<void>
@@ -38,99 +27,100 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function AuthProviderBase({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+function toAuthUser(user: FirebaseUser): AuthUser {
+  return {
+    id: user.uid,
+    name: user.displayName ?? "OptiMelon User",
+    email: user.email ?? undefined,
+    avatarUrl: user.photoURL ?? undefined,
+  }
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authReady, setAuthReady] = useState(false)
 
-  const supabase = useMemo(() => getSupabaseClient(), [])
-  const authReady = useMemo(() => Boolean(supabase), [supabase])
-
-  const syncProfile = useCallback(async (nextUser: User) => {
-    if (!supabase) return
-    try {
-      const profile = {
-        id: nextUser.id,
-        email: nextUser.email ?? null,
-        full_name: nextUser.user_metadata?.full_name ?? nextUser.user_metadata?.name ?? null,
-        avatar_url: nextUser.user_metadata?.avatar_url ?? null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-
-      await supabase.from("profiles").upsert(profile, { onConflict: "id" })
-    } catch (error) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("Supabase profile sync failed.", error)
-      }
-    }
-  }, [supabase])
+  const initClient = useMemo(() => getFirebaseClient(), [])
 
   useEffect(() => {
     let isMounted = true
+    let unsubscribe: (() => void) | null = null
 
-    if (!supabase) {
-      setLoading(false)
-      setUser(null)
-      return () => {
-        isMounted = false
-      }
-    }
-
-    supabase.auth.getSession()
-      .then(({ data }) => {
-        if (!isMounted) return
-        setUser(data.session?.user ?? null)
-        setLoading(false)
-      })
-      .catch((error) => {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Failed to read Supabase session.", error)
-        }
-        if (isMounted) setLoading(false)
-      })
-
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    initClient.then((client) => {
       if (!isMounted) return
-      const nextUser = session?.user ?? null
-      setUser(nextUser)
-      setLoading(false)
-      if (nextUser) {
-        void syncProfile(nextUser)
+      if (!client) {
+        setAuthReady(false)
+        setLoading(false)
+        return
       }
+
+      const { auth, authModule, db, firestoreModule } = client
+
+      unsubscribe = authModule.onAuthStateChanged(
+        auth,
+        (firebaseUser) => {
+          if (!isMounted) return
+          if (firebaseUser) {
+            const nextUser = toAuthUser(firebaseUser)
+            setUser(nextUser)
+            void firestoreModule
+              .setDoc(
+                firestoreModule.doc(db, "users", firebaseUser.uid),
+                {
+                  name: nextUser.name,
+                  email: nextUser.email ?? null,
+                  avatarUrl: nextUser.avatarUrl ?? null,
+                  updatedAt: firestoreModule.serverTimestamp(),
+                },
+                { merge: true }
+              )
+              .catch(() => {
+                // Silent failure
+              })
+          } else {
+            setUser(null)
+          }
+          setAuthReady(true)
+          setLoading(false)
+        },
+        () => {
+          if (!isMounted) return
+          setAuthReady(true)
+          setLoading(false)
+        }
+      )
     })
 
     return () => {
       isMounted = false
-      subscription?.subscription.unsubscribe()
+      if (unsubscribe) unsubscribe()
     }
-  }, [supabase, syncProfile])
+  }, [initClient])
 
   const signInWithGoogle = useCallback(async () => {
-    if (!supabase) return
+    const client = await initClient
+    if (!client) return
+
+    const { auth, authModule } = client
+    const provider = new authModule.GoogleAuthProvider()
+    provider.setCustomParameters({ prompt: "select_account" })
     try {
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: window.location.origin,
-        },
-      })
-    } catch (error) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("Supabase Google sign-in failed.", error)
-      }
+      await authModule.signInWithPopup(auth, provider)
+    } catch {
+      // Silent failure
     }
-  }, [supabase])
+  }, [initClient])
 
   const signOut = useCallback(async () => {
-    if (!supabase) return
+    const client = await initClient
+    if (!client) return
     try {
-      await supabase.auth.signOut()
-    } catch (error) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("Supabase sign-out failed.", error)
-      }
+      await client.authModule.signOut(client.auth)
+    } catch {
+      // Silent failure
     }
-  }, [supabase])
+  }, [initClient])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -145,8 +135,6 @@ function AuthProviderBase({ children }: { children: React.ReactNode }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
-
-export const AuthProvider = memo(AuthProviderBase)
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext)
