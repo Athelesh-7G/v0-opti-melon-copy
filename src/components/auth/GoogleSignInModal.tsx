@@ -39,8 +39,10 @@ function GoogleIcon() {
 }
 
 export function GoogleSignInModal({ triggerLabel = "Sign In" }: { triggerLabel?: string }) {
-  const { isOpen, openSignIn, closeSignIn, signInWithGoogle, isLoading, error, clearError } = useAuth()
+  const { isOpen, openSignIn, closeSignIn, signInWithGoogle, isLoading, error, clearError, authReady } = useAuth()
   const [showWelcome, setShowWelcome] = useState(false)
+
+  if (!authReady) return null
 
   const modalClasses = useMemo(
     () =>

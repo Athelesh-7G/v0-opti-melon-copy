@@ -1,66 +1,89 @@
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app"
+import { getAuth, type Auth } from "firebase/auth"
+import { getFirestore, type Firestore } from "firebase/firestore"
+
+const REQUIRED_ENV_KEYS = [
+  "VITE_FIREBASE_API_KEY",
+  "VITE_FIREBASE_AUTH_DOMAIN",
+  "VITE_FIREBASE_PROJECT_ID",
+]
+
 export interface FirebaseWebConfig {
   apiKey: string
   authDomain: string
   projectId: string
-  storageBucket: string
-  messagingSenderId: string
-  appId: string
+  storageBucket?: string
+  messagingSenderId?: string
+  appId?: string
 }
-
-export interface GoogleAuthResult {
-  accessToken?: string
-  idToken?: string
-  code?: string
-  state?: string
-}
-
-const GOOGLE_SCOPES = ["openid", "email", "profile"]
 
 export const firebaseConfig: FirebaseWebConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
+  apiKey: process.env.VITE_FIREBASE_API_KEY ?? "",
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN ?? "",
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID ?? "",
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET ?? "",
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? "",
+  appId: process.env.VITE_FIREBASE_APP_ID ?? "",
+}
+
+function logMissingFirebaseEnv(missingKeys: string[]) {
+  const message = `Firebase env vars missing: ${missingKeys.join(", ")}`
+  console.warn(message)
+  if (process.env.NODE_ENV !== "production") {
+    console.error(message)
+  }
 }
 
 export function isFirebaseConfigured(): boolean {
-  return Boolean(
-    firebaseConfig.apiKey &&
-      firebaseConfig.authDomain &&
-      firebaseConfig.projectId &&
-      firebaseConfig.appId
-  )
+  return REQUIRED_ENV_KEYS.every((key) => Boolean(process.env[key]))
 }
 
-export function buildGoogleOAuthUrl(state: string): string {
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ""
-  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ??
-    (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : "")
+function getFirebaseApp(): FirebaseApp | null {
+  if (!isFirebaseConfigured()) {
+    const missingKeys = REQUIRED_ENV_KEYS.filter((key) => !process.env[key])
+    logMissingFirebaseEnv(missingKeys)
+    return null
+  }
 
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: "token id_token",
-    scope: GOOGLE_SCOPES.join(" "),
-    include_granted_scopes: "true",
-    prompt: "select_account",
-    state,
-    nonce: state,
-  })
+  try {
+    if (getApps().length > 0) {
+      return getApps()[0]
+    }
 
-  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+    return initializeApp(firebaseConfig)
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Failed to initialize Firebase app.", error)
+    }
+    console.warn("Firebase app initialization failed; auth disabled.")
+    return null
+  }
 }
 
-export function parseGoogleHash(hash: string): GoogleAuthResult {
-  const normalizedHash = hash.startsWith("#") ? hash.slice(1) : hash
-  const params = new URLSearchParams(normalizedHash)
+export function getFirebaseAuth(): Auth | null {
+  const app = getFirebaseApp()
+  if (!app) return null
+  try {
+    return getAuth(app)
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Failed to initialize Firebase auth.", error)
+    }
+    console.warn("Firebase auth unavailable; sign-in disabled.")
+    return null
+  }
+}
 
-  return {
-    accessToken: params.get("access_token") ?? undefined,
-    idToken: params.get("id_token") ?? undefined,
-    code: params.get("code") ?? undefined,
-    state: params.get("state") ?? undefined,
+export function getFirebaseDb(): Firestore | null {
+  const app = getFirebaseApp()
+  if (!app) return null
+  try {
+    return getFirestore(app)
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Failed to initialize Firestore.", error)
+    }
+    console.warn("Firestore unavailable; user sync disabled.")
+    return null
   }
 }

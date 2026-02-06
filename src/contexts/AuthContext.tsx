@@ -1,7 +1,9 @@
 "use client"
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react"
-import { buildGoogleOAuthUrl, isFirebaseConfigured, parseGoogleHash } from "@/src/lib/firebase"
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth"
+import { doc, serverTimestamp, setDoc } from "firebase/firestore"
+import { getFirebaseAuth, getFirebaseDb } from "@/src/lib/firebase"
 
 interface AuthUser {
   name: string
@@ -14,6 +16,7 @@ interface AuthContextValue {
   isLoading: boolean
   error: string | null
   isOpen: boolean
+  authReady: boolean
   openSignIn: () => void
   closeSignIn: () => void
   signInWithGoogle: () => Promise<void>
@@ -23,17 +26,15 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-const POPUP_FEATURES = "width=520,height=640,left=200,top=120,resizable=yes,scrollbars=yes,status=no"
-
-function buildStateSeed(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [authReady, setAuthReady] = useState(false)
+
+  const auth = useMemo(() => getFirebaseAuth(), [])
+  const db = useMemo(() => getFirebaseDb(), [])
 
   const openSignIn = useCallback(() => setIsOpen(true), [])
   const closeSignIn = useCallback(() => {
@@ -42,72 +43,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
   const clearError = useCallback(() => setError(null), [])
 
-  const signOut = useCallback(() => {
-    setUser(null)
-  }, [])
-
-  const signInWithGoogle = useCallback(async () => {
-    setError(null)
-
-    if (typeof window === "undefined") return
-    if (!isFirebaseConfigured()) {
-      setError("Auth is not configured yet. Add Firebase and Google env variables to continue.")
+  useEffect(() => {
+    if (!auth) {
+      setAuthReady(false)
       return
     }
 
+    let isSubscribed = true
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (firebaseUser) => {
+        if (!isSubscribed) return
+        if (firebaseUser) {
+          const nextUser = {
+            name: firebaseUser.displayName ?? "OptiMelon User",
+            email: firebaseUser.email ?? undefined,
+            avatarUrl: firebaseUser.photoURL ?? undefined,
+          }
+          setUser(nextUser)
+
+          if (db) {
+            void setDoc(
+              doc(db, "users", firebaseUser.uid),
+              {
+                name: nextUser.name,
+                email: nextUser.email ?? null,
+                avatarUrl: nextUser.avatarUrl ?? null,
+                updatedAt: serverTimestamp(),
+              },
+              { merge: true }
+            ).catch((syncError) => {
+              if (process.env.NODE_ENV !== "production") {
+                console.error("Failed to sync user profile.", syncError)
+              }
+            })
+          }
+        } else {
+          setUser(null)
+        }
+        setAuthReady(true)
+      },
+      (authError) => {
+        if (!isSubscribed) return
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Firebase auth observer error.", authError)
+        }
+        setAuthReady(true)
+      }
+    )
+
+    return () => {
+      isSubscribed = false
+      unsubscribe()
+    }
+  }, [auth, db])
+
+  const signOut = useCallback(() => {
+    if (!auth) {
+      setUser(null)
+      return
+    }
+    void firebaseSignOut(auth)
+      .catch((signOutError) => {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to sign out.", signOutError)
+        }
+      })
+      .finally(() => setUser(null))
+  }, [auth])
+
+  const signInWithGoogle = useCallback(async () => {
+    if (!auth) return
+    setError(null)
     setIsLoading(true)
-    const state = buildStateSeed()
 
     try {
-      const authUrl = buildGoogleOAuthUrl(state)
-      const popup = window.open(authUrl, "optimelon-google-signin", POPUP_FEATURES)
-
-      if (!popup) {
-        throw new Error("Popup blocked. Please allow popups and try again.")
-      }
-
-      await new Promise<void>((resolve, reject) => {
-        const timeout = window.setTimeout(() => {
-          reject(new Error("Google sign-in timed out. Please try again."))
-        }, 90_000)
-
-        const tick = window.setInterval(() => {
-          if (popup.closed) {
-            window.clearInterval(tick)
-            window.clearTimeout(timeout)
-            reject(new Error("Sign-in cancelled."))
-            return
-          }
-
-          try {
-            if (!popup.location.href.startsWith(window.location.origin)) return
-            const parsed = parseGoogleHash(popup.location.hash)
-            if (!parsed.idToken && !parsed.accessToken) return
-            if (parsed.state !== state) {
-              throw new Error("Security validation failed. Please retry sign-in.")
-            }
-
-            setUser({ name: "Athelesh", email: "authenticated@google" })
-            popup.close()
-            window.clearInterval(tick)
-            window.clearTimeout(timeout)
-            resolve()
-          } catch (err) {
-            if (err instanceof DOMException) return
-            window.clearInterval(tick)
-            window.clearTimeout(timeout)
-            reject(err)
-          }
-        }, 250)
-      })
+      const provider = new GoogleAuthProvider()
+      provider.setCustomParameters({ prompt: "select_account" })
+      await signInWithPopup(auth, provider)
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to sign in with Google."
-      setError(message)
-      throw err
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Google sign-in failed.", err)
+      }
+      setError("Failed to sign in with Google.")
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [auth])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -115,13 +137,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       error,
       isOpen,
+      authReady,
       openSignIn,
       closeSignIn,
       signInWithGoogle,
       signOut,
       clearError,
     }),
-    [user, isLoading, error, isOpen, openSignIn, closeSignIn, signInWithGoogle, signOut, clearError]
+    [user, isLoading, error, isOpen, authReady, openSignIn, closeSignIn, signInWithGoogle, signOut, clearError]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
