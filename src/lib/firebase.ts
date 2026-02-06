@@ -1,37 +1,10 @@
 "use client"
 
-const REQUIRED_ENV_KEYS = [
-  "VITE_FIREBASE_API_KEY",
-  "VITE_FIREBASE_AUTH_DOMAIN",
-  "VITE_FIREBASE_PROJECT_ID",
-]
-
-export interface FirebaseWebConfig {
-  apiKey: string
-  authDomain: string
-  projectId: string
-  storageBucket?: string
-  messagingSenderId?: string
-  appId?: string
-}
-
-export const firebaseConfig: FirebaseWebConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY ?? "",
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN ?? "",
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID ?? "",
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET ?? "",
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? "",
-  appId: process.env.VITE_FIREBASE_APP_ID ?? "",
-}
-
-type FirebaseAppModule = {
-  getApps: () => unknown[]
-  initializeApp: (config: FirebaseWebConfig) => unknown
-}
-
 type FirebaseAuthModule = {
   getAuth: (app: unknown) => unknown
-  GoogleAuthProvider: new () => { setCustomParameters: (params: Record<string, string>) => void }
+  GoogleAuthProvider: new () => {
+    setCustomParameters: (params: Record<string, string>) => void
+  }
   onAuthStateChanged: (
     auth: unknown,
     next: (user: FirebaseUser | null) => void,
@@ -44,8 +17,17 @@ type FirebaseAuthModule = {
 type FirebaseFirestoreModule = {
   getFirestore: (app: unknown) => unknown
   doc: (db: unknown, collection: string, id: string) => unknown
-  setDoc: (ref: unknown, data: Record<string, unknown>, options?: { merge: boolean }) => Promise<void>
+  setDoc: (
+    ref: unknown,
+    data: Record<string, unknown>,
+    options?: { merge: boolean }
+  ) => Promise<void>
   serverTimestamp: () => unknown
+}
+
+type FirebaseAppModule = {
+  initializeApp: (config: FirebaseWebConfig) => unknown
+  getApps: () => unknown[]
 }
 
 export type FirebaseUser = {
@@ -57,30 +39,37 @@ export type FirebaseUser = {
 
 export type FirebaseClient = {
   auth: unknown
-  db: unknown | null
-  authModule: FirebaseAuthModule
-  firestoreModule: FirebaseFirestoreModule | null
-}
-
-let firebaseClientPromise: Promise<FirebaseClient | null> | null = null
-
-function logMissingFirebaseEnv(missingKeys: string[]) {
-  const message = `Firebase env vars missing: ${missingKeys.join(", ")}`
-  console.warn(message)
-  if (process.env.NODE_ENV !== "production") {
-    console.error(message)
-  }
-}
-
-export function isFirebaseConfigured(): boolean {
-  return REQUIRED_ENV_KEYS.every((key) => Boolean(process.env[key]))
-}
-
-async function loadFirebaseModules(): Promise<{
-  appModule: FirebaseAppModule
+  db: unknown
   authModule: FirebaseAuthModule
   firestoreModule: FirebaseFirestoreModule
-}> {
+}
+
+export type FirebaseWebConfig = {
+  apiKey: string
+  authDomain: string
+  projectId: string
+}
+
+const firebaseConfig: FirebaseWebConfig = {
+  apiKey: process.env.VITE_FIREBASE_API_KEY ?? "",
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN ?? "",
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID ?? "",
+}
+
+const REQUIRED_KEYS = [
+  "VITE_FIREBASE_API_KEY",
+  "VITE_FIREBASE_AUTH_DOMAIN",
+  "VITE_FIREBASE_PROJECT_ID",
+]
+
+let firebaseClient: FirebaseClient | null = null
+let initPromise: Promise<FirebaseClient | null> | null = null
+
+function hasFirebaseConfig() {
+  return REQUIRED_KEYS.every((key) => Boolean(process.env[key]))
+}
+
+async function loadModules() {
   const [appModule, authModule, firestoreModule] = await Promise.all([
     import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
     import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js"),
@@ -91,20 +80,6 @@ async function loadFirebaseModules(): Promise<{
     appModule: appModule as FirebaseAppModule,
     authModule: authModule as FirebaseAuthModule,
     firestoreModule: firestoreModule as FirebaseFirestoreModule,
-  }
-}
-
-export function getFirebaseClient(): Promise<FirebaseClient | null> {
-  if (firebaseClientPromise) return firebaseClientPromise
-
-  if (typeof window === "undefined") {
-    return Promise.resolve(null)
-  }
-
-  if (!isFirebaseConfigured()) {
-    const missingKeys = REQUIRED_ENV_KEYS.filter((key) => !process.env[key])
-    logMissingFirebaseEnv(missingKeys)
-    return Promise.resolve(null)
   }
 
   firebaseClientPromise = loadFirebaseModules()
@@ -130,4 +105,33 @@ export function getFirebaseClient(): Promise<FirebaseClient | null> {
     })
 
   return firebaseClientPromise
+}
+
+export async function getFirebaseClient(): Promise<FirebaseClient | null> {
+  if (firebaseClient) return firebaseClient
+  if (initPromise) return initPromise
+  if (typeof window === "undefined") return null
+  if (!hasFirebaseConfig()) return null
+
+  initPromise = loadModules()
+    .then(({ appModule, authModule, firestoreModule }) => {
+      const existing = appModule.getApps()
+      const app = existing.length > 0
+        ? existing[0]
+        : appModule.initializeApp(firebaseConfig)
+      const auth = authModule.getAuth(app)
+      const db = firestoreModule.getFirestore(app)
+
+      firebaseClient = {
+        auth,
+        db,
+        authModule,
+        firestoreModule,
+      }
+
+      return firebaseClient
+    })
+    .catch(() => null)
+
+  return initPromise
 }
